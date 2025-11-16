@@ -20,7 +20,7 @@ fun AppNav() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Shared cart state for the whole app
+    // Shared cart state
     val cartItems = remember { mutableStateListOf<CartItem>() }
 
     fun addToCart(product: ProductUi) {
@@ -67,6 +67,7 @@ fun AppNav() {
 
             composable("home") {
                 AgriDirectHomeScreen(
+                    navController = navController,
                     onOpenFarms = { navController.navigate("farms") },
                     onOpenMarkets = { navController.navigate("markets") },
                     onOpenRegisterFarm = { navController.navigate("registerFarm") },
@@ -76,6 +77,7 @@ fun AppNav() {
 
             composable("farms") {
                 FarmsScreen(
+                    navController = navController,
                     onFarmClick = { farmName ->
                         navController.navigate("farmDetails/$farmName")
                     }
@@ -90,25 +92,27 @@ fun AppNav() {
             ) { backStackEntry ->
                 val farmName = backStackEntry.arguments?.getString("farmName") ?: "Farm"
                 FarmDetailsScreen(
+                    navController = navController,
                     farmName = farmName,
                     onAddToCart = { product -> addToCart(product) }
                 )
             }
 
             composable("markets") {
-                MarketsScreen()
+                MarketsScreen(navController = navController)
             }
 
             composable("registerFarm") {
-                RegisterFarmScreen()
+                RegisterFarmScreen(navController = navController)
             }
 
             composable("registerBooth") {
-                RegisterBoothScreen()
+                RegisterBoothScreen(navController = navController)
             }
 
             composable("blog") {
                 BlogScreen(
+                    navController = navController,
                     onArticleClick = { articleId ->
                         navController.navigate("article/$articleId")
                     }
@@ -122,11 +126,15 @@ fun AppNav() {
                 )
             ) { backStackEntry ->
                 val articleId = backStackEntry.arguments?.getString("articleId") ?: "a1"
-                ArticleScreen(articleId = articleId)
+                ArticleScreen(
+                    navController = navController,
+                    articleId = articleId
+                )
             }
 
             composable("cart") {
                 CartScreen(
+                    navController = navController,
                     cartItems = cartItems,
                     onCheckout = {
                         navController.navigate("checkout")
@@ -134,9 +142,9 @@ fun AppNav() {
                 )
             }
 
-            // NEW: Checkout route
             composable("checkout") {
                 CheckoutScreen(
+                    navController = navController,
                     cartItems = cartItems,
                     onOrderPlaced = {
                         clearCart()
@@ -148,27 +156,28 @@ fun AppNav() {
             }
 
             composable("profile") {
-                ProfileScreen()
+                ProfileScreen(navController = navController)
             }
 
             composable("favorites") {
-                FavoritesScreen()
+                FavoritesScreen(navController = navController)
             }
 
             composable("settings") {
-                SettingsScreen()
+                SettingsScreen(navController = navController)
             }
 
             composable("notifications") {
-                NotificationsScreen()
+                NotificationsScreen(navController = navController)
             }
 
             composable("about") {
-                AboutScreen()
+                AboutScreen(navController = navController)
             }
 
             composable("menu") {
                 MainMenuScreen(
+                    navController = navController,
                     onOpenProfile = { navController.navigate("profile") },
                     onOpenSettings = { navController.navigate("settings") },
                     onOpenFavorites = { navController.navigate("favorites") },

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.agridirect20.ui.theme.AgriDirectTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,20 +26,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgriDirectHomeScreen(
+    navController: NavController,
     onOpenFarms: () -> Unit,
     onOpenMarkets: () -> Unit,
     onOpenRegisterFarm: () -> Unit,
     onOpenRegisterBooth: () -> Unit
 ) {
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("AgriDirect") }
-            )
-        }
+        topBar = {}
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -82,8 +79,13 @@ fun HomeTile(
             .fillMaxWidth()
             .height(140.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
         onClick = onClick
-    ) {
+    )
+    {
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -96,7 +98,7 @@ fun HomeTile(
                 modifier = Modifier
                     .width(145.dp)
                     .height(114.dp),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
 
             Spacer(modifier = Modifier.width(16.dp))

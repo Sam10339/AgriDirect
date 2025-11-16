@@ -7,10 +7,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 data class CartItem(
     val productName: String,
@@ -20,63 +22,69 @@ data class CartItem(
 
 @Composable
 fun CartScreen(
+    navController: NavController,
     cartItems: List<CartItem>,
     onCheckout: () -> Unit
 ) {
     val total = cartItems.sumOf { it.price * it.quantity }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Shopping Cart",
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        if (cartItems.isEmpty()) {
+    Scaffold(
+        topBar = { AgriTopBar(navController = navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize()
+        ) {
             Text(
-                text = "Your cart is empty.",
-                style = MaterialTheme.typography.bodyMedium
+                text = "Shopping Cart",
+                style = MaterialTheme.typography.headlineSmall
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(cartItems) { item ->
-                    CartItemCard(item = item)
-                }
-            }
 
             Spacer(Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            if (cartItems.isEmpty()) {
                 Text(
-                    text = "Total:",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Your cart is empty.",
+                    style = MaterialTheme.typography.bodyMedium
                 )
-                Text(
-                    text = String.format("$%.2f", total),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(cartItems) { item ->
+                        CartItemCard(item = item)
+                    }
+                }
 
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
-            Button(
-                onClick = onCheckout,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Proceed to Checkout")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Total:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = String.format("$%.2f", total),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                AgriPrimaryButton(
+                    onClick = onCheckout,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Proceed to Checkout")
+                }
             }
         }
     }
@@ -111,4 +119,3 @@ fun CartItemCard(item: CartItem) {
         }
     }
 }
-

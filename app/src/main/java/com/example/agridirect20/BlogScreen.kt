@@ -7,10 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 data class ArticleUi(
     val id: String,
@@ -20,6 +22,7 @@ data class ArticleUi(
 
 @Composable
 fun BlogScreen(
+    navController: NavController,
     onArticleClick: (String) -> Unit
 ) {
     val articles = listOf(
@@ -40,22 +43,29 @@ fun BlogScreen(
         )
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Blog & Learning",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    Scaffold(
+        topBar = { AgriTopBar(navController = navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
         ) {
-            items(articles) { article ->
-                ArticleCard(article = article, onClick = { onArticleClick(article.id) })
+            Text(
+                text = "Blog & Learning",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(articles) { article ->
+                    ArticleCard(
+                        article = article,
+                        onClick = { onArticleClick(article.id) }
+                    )
+                }
             }
         }
     }
@@ -70,7 +80,11 @@ fun ArticleCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
