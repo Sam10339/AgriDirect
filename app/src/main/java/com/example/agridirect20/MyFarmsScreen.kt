@@ -12,13 +12,24 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 @Composable
-fun FarmsScreen(navController: NavController) {
-    var zipInput by remember { mutableStateOf("") }
+fun MyFarmsScreen(navController: NavController) {
+    val scope = rememberCoroutineScope()
     var farms by remember { mutableStateOf<List<Farm>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                isLoading = true
+                farms = FirebaseFarmRepository.getFarmsForCurrentUser()
+            } catch (e: Exception) {
+                errorMessage = "Failed to load your farms: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -27,71 +38,51 @@ fun FarmsScreen(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             Text(
-                text = "Find Local Farms",
+                text = "Your Farms",
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            OutlinedTextField(
-                value = zipInput,
-                onValueChange = { zipInput = it },
-                label = { Text("Enter ZIP Code") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            )
-
-            AgriPrimaryButton(
-                onClick = {
-                    errorMessage = null
-                    if (zipInput.isBlank()) {
-                        errorMessage = "Please enter a ZIP code."
-                        return@AgriPrimaryButton
-                    }
-
-                    scope.launch {
-                        try {
-                            isLoading = true
-                            farms = FirebaseFarmRepository.getFarmsByZip(zipInput)
-                            if (farms.isEmpty()) {
-                                errorMessage = "No farms found for that ZIP."
-                            }
-                        } catch (e: Exception) {
-                            errorMessage = "Failed to load farms: ${e.message}"
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-                },
+            Button(
+                onClick = { navController.navigate("registerFarm") },
                 modifier = Modifier
                     .padding(top = 12.dp)
                     .fillMaxWidth()
             ) {
-                Text(if (isLoading) "Searching..." else "Search Farms")
+                Text("Register a New Farm")
             }
 
-            if (errorMessage != null) {
+            if (isLoading) {
+                Text(
+                    text = "Loading...",
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            } else if (errorMessage != null) {
                 Text(
                     text = errorMessage!!,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 12.dp)
+                    modifier = Modifier.padding(top = 16.dp)
                 )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            if (farms.isNotEmpty()) {
+            } else if (farms.isEmpty()) {
+                Text(
+                    text = "You haven't registered any farms yet.",
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(farms) { farm ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    navController.navigate("farmDetails/${farm.id}")
+                                    navController.navigate("manageFarm/${farm.id}")
                                 },
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             colors = CardDefaults.cardColors(
@@ -115,7 +106,6 @@ fun FarmsScreen(navController: NavController) {
                             }
                         }
                     }
-
                 }
             }
         }

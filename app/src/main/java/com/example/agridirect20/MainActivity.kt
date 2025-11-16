@@ -32,7 +32,6 @@ fun AgriDirectHomeScreen(
     onOpenFarms: () -> Unit,
     onOpenMarkets: () -> Unit,
     onOpenRegisterFarm: () -> Unit,
-    onOpenRegisterBooth: () -> Unit
 ) {
     Scaffold(
         topBar = {}
@@ -50,19 +49,14 @@ fun AgriDirectHomeScreen(
                 onClick = onOpenFarms
             )
             HomeTile(
-                title = "Find Farmer's Market",
-                imageRes = R.drawable.home_markets,
-                onClick = onOpenMarkets
-            )
-            HomeTile(
                 title = "Edit/Register Your Farm",
                 imageRes = R.drawable.home_register_farm,
                 onClick = onOpenRegisterFarm
             )
             HomeTile(
-                title = "Edit/Register Your Booth At a Market",
-                imageRes = R.drawable.home_register_booth,
-                onClick = onOpenRegisterBooth
+                title = "Find Farmer's Market",
+                imageRes = R.drawable.home_markets,
+                onClick = onOpenMarkets
             )
         }
     }
