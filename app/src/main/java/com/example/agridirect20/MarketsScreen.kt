@@ -19,11 +19,13 @@ fun MarketsScreen(navController: NavController) {
             AgriTopBar(navController = navController)
         }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            MapScreen()
             Text(
                 text = "Find Farmer's Market",
                 style = MaterialTheme.typography.headlineSmall
