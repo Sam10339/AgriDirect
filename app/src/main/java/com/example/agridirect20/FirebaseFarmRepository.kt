@@ -17,18 +17,18 @@ object FirebaseFarmRepository {
         zip: String,
         products: List<Product>
     ): Farm {
+        val userId = AuthManager.currentUser?.uid
+            ?: throw IllegalStateException("User must be signed in to create a farm")
+
         val farmData = hashMapOf(
             "name" to name.trim(),
             "description" to description.trim(),
             "zip" to zip.trim(),
-            // later you can use FirebaseAuth currentUser.uid
-            "createdByUserId" to "unknown"
+            "createdByUserId" to userId
         )
 
-        // 1) Add farm document
         val farmRef = farmsCollection.add(farmData).await()
 
-        // 2) Add products as subcollection
         val productDocs = mutableListOf<Product>()
         for (product in products) {
             val productData = hashMapOf(
@@ -41,15 +41,34 @@ object FirebaseFarmRepository {
             productDocs.add(product.copy(id = prodRef.id))
         }
 
-        // 3) Return combined model
         return Farm(
             id = farmRef.id,
             name = name.trim(),
             description = description.trim(),
             zip = zip.trim(),
-            createdByUserId = "unknown",
+            createdByUserId = userId,
             products = productDocs
         )
+    }
+    suspend fun getFarmsForCurrentUser(): List<Farm> {
+        val userId = AuthManager.currentUser?.uid
+            ?: throw IllegalStateException("User must be signed in")
+
+        val snapshot = farmsCollection
+            .whereEqualTo("createdByUserId", userId)
+            .get()
+            .await()
+
+        return snapshot.documents.map { doc ->
+            Farm(
+                id = doc.id,
+                name = doc.getString("name") ?: "",
+                description = doc.getString("description") ?: "",
+                zip = doc.getString("zip") ?: "",
+                createdByUserId = userId,
+                products = emptyList() // we can load full details later
+            )
+        }
     }
 
     /**
@@ -108,5 +127,65 @@ object FirebaseFarmRepository {
             createdByUserId = createdBy,
             products = products
         )
+    }
+    suspend fun updateFarm(
+        farmId: String,
+        name: String,
+        description: String,
+        zip: String
+    ) {
+        farmsCollection.document(farmId).update(
+            mapOf(
+                "name" to name.trim(),
+                "description" to description.trim(),
+                "zip" to zip.trim()
+            )
+        ).await()
+    }
+    suspend fun updateProduct(
+        farmId: String,
+        product: Product
+    ) {
+        farmsCollection
+            .document(farmId)
+            .collection("products")
+            .document(product.id)
+            .update(
+                mapOf(
+                    "name" to product.name,
+                    "description" to product.description,
+                    "price" to product.price,
+                    "amount" to product.amount
+                )
+            ).await()
+    }
+
+    suspend fun deleteProduct(
+        farmId: String,
+        productId: String
+    ) {
+        farmsCollection
+            .document(farmId)
+            .collection("products")
+            .document(productId)
+            .delete()
+            .await()
+    }
+
+    suspend fun addProductToFarm(
+        farmId: String,
+        product: Product
+    ) {
+        farmsCollection
+            .document(farmId)
+            .collection("products")
+            .add(
+                mapOf(
+                    "name" to product.name,
+                    "description" to product.description,
+                    "price" to product.price,
+                    "amount" to product.amount
+                )
+            ).await()
     }
 }
