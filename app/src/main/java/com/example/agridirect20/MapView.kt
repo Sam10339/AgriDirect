@@ -130,7 +130,7 @@ fun MapScreen(){
     }
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(0.7f),
         cameraPositionState = cameraPositionState,
         properties = properties,
         uiSettings = uiSettings
