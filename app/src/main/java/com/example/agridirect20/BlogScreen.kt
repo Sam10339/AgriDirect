@@ -28,18 +28,18 @@ fun BlogScreen(
     val articles = listOf(
         ArticleUi(
             id = "a1",
-            title = "Intro to Local Farming",
-            summary = "Learn the basics of how local farms operate and why buying local matters."
+            title = "The Benefits and Basics of Home Gardening",
+            summary = "Home gardening provides a simple and rewarding way for people to grow fresh food, save money, support the environment, and improve their overall well-being."
         ),
         ArticleUi(
             id = "a2",
-            title = "How to Read Produce Labels",
-            summary = "Understand the difference between organic, local, and other common labels."
+            title = "The Importance of Water Conservation",
+            summary = "Water conservation is essential for protecting limited freshwater resources, reducing energy use, preserving ecosystems, and ensuring a sustainable future for generations to come."
         ),
         ArticleUi(
             id = "a3",
-            title = "Benefits of Seasonal Eating",
-            summary = "Discover why eating in-season fruits and vegetables can be healthier and cheaper."
+            title = "The Value of Natural Fertilizers ",
+            summary = "Natural fertilizers offer a sustainable, safe, and cost-effective way to improve soil health, reduce environmental harm, and grow healthier crops without relying on synthetic chemicals."
         )
     )
 
