@@ -76,12 +76,7 @@ fun AppNav() {
             }
 
             composable("farms") {
-                FarmsScreen(
-                    navController = navController,
-                    onFarmClick = { farmName ->
-                        navController.navigate("farmDetails/$farmName")
-                    }
-                )
+                FarmsScreen(navController = navController)
             }
 
             composable(

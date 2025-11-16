@@ -1,62 +1,24 @@
 package com.example.agridirect20
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
-data class FarmUi(
-    val name: String,
-    val description: String,
-    val availability: String,
-    val price: String,
-    val imageRes: Int
-)
+import kotlinx.coroutines.launch
 
 @Composable
-fun FarmsScreen(
-    navController: NavController,
-    onFarmClick: (String) -> Unit
-) {
-    val farms = listOf(
-        FarmUi(
-            name = "Nearby Farm",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_1
-        ),
-        FarmUi(
-            name = "Nearby Farm 2",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_2
-        ),
-        FarmUi(
-            name = "Nearby Farm 3",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_3
-        ),
-        FarmUi(
-            name = "Nearby Farm 4",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_4
-        )
-    )
+fun FarmsScreen(navController: NavController) {
+    var zipInput by remember { mutableStateOf("") }
+    var farms by remember { mutableStateOf<List<Farm>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -64,92 +26,97 @@ fun FarmsScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
                 .padding(16.dp)
         ) {
             Text(
-                text = "Local Farms",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 16.dp)
+                text = "Find Local Farms",
+                style = MaterialTheme.typography.headlineSmall
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
+            OutlinedTextField(
+                value = zipInput,
+                onValueChange = { zipInput = it },
+                label = { Text("Enter ZIP Code") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            )
+
+            AgriPrimaryButton(
+                onClick = {
+                    errorMessage = null
+                    if (zipInput.isBlank()) {
+                        errorMessage = "Please enter a ZIP code."
+                        return@AgriPrimaryButton
+                    }
+
+                    scope.launch {
+                        try {
+                            isLoading = true
+                            farms = FirebaseFarmRepository.getFarmsByZip(zipInput)
+                            if (farms.isEmpty()) {
+                                errorMessage = "No farms found for that ZIP."
+                            }
+                        } catch (e: Exception) {
+                            errorMessage = "Failed to load farms: ${e.message}"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .fillMaxWidth()
             ) {
-                items(farms) { farm ->
-                    FarmCard(
-                        farm = farm,
-                        onClick = { onFarmClick(farm.name) }
-                    )
-                }
+                Text(if (isLoading) "Searching..." else "Search Farms")
             }
-        }
-    }
-}
 
-@Composable
-fun FarmCard(
-    farm: FarmUi,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Image(
-                painter = painterResource(id = farm.imageRes),
-                contentDescription = farm.name,
-                modifier = Modifier
-                    .width(150.dp)
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Crop
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(10.dp)
-            ) {
+            if (errorMessage != null) {
                 Text(
-                    text = farm.name,
-                    style = MaterialTheme.typography.titleMedium
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 12.dp)
                 )
+            }
 
-                Text(
-                    text = farm.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .weight(1f),
-                    maxLines = 2
-                )
+            Spacer(Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+            if (farms.isNotEmpty()) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Text(
-                        text = farm.availability,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        text = farm.price,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    items(farms) { farm ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // later: navController.navigate("farmDetails/${farm.id}")
+                                },
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = farm.name,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = farm.description,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                                Text(
+                                    text = "ZIP: ${farm.zip}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
