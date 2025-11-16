@@ -6,57 +6,62 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 data class FarmUi(
-    val name: String,
-    val description: String,
-    val availability: String,
-    val price: String,
-    val imageRes: Int
+    val id: String = "",
+    val name: String = "",
+    val description: String = "",
+    val availability: String = "",
+    val price: String = "",
+    val imageUrl: String = ""
 )
 
 @Composable
 fun FarmsScreen(
     navController: NavController,
+    db: FirebaseFirestore,
     onFarmClick: (String) -> Unit
 ) {
-    val farms = listOf(
-        FarmUi(
-            name = "Nearby Farm",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_1
-        ),
-        FarmUi(
-            name = "Nearby Farm 2",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_2
-        ),
-        FarmUi(
-            name = "Nearby Farm 3",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_3
-        ),
-        FarmUi(
-            name = "Nearby Farm 4",
-            description = "This is a description of this item as a vegetable, fruit, or animal product.",
-            availability = "Availability",
-            price = "Price",
-            imageRes = R.drawable.farm_4
-        )
-    )
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val farms = remember { mutableStateListOf<FarmUi>() }
+
+    // Load farms from Firebase
+    LaunchedEffect(Unit) {
+        try {
+            loading = true
+            error = null
+            farms.clear()
+
+            val snapshot = db.collection("farms").get().await()
+
+            val list = snapshot.documents.map { doc ->
+                FarmUi(
+                    id = doc.id,
+                    name = doc.getString("name") ?: "",
+                    description = doc.getString("description") ?: "",
+                    availability = doc.getString("availability") ?: "",
+                    price = doc.getString("price") ?: "",
+                    imageUrl = doc.getString("imageUrl") ?: ""
+                )
+            }
+
+            farms.addAll(list)
+        } catch (e: Exception) {
+            error = "Failed to load farms: ${e.message}"
+        } finally {
+            loading = false
+        }
+    }
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -64,8 +69,8 @@ fun FarmsScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             Text(
                 text = "Local Farms",
@@ -73,16 +78,26 @@ fun FarmsScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(farms) { farm ->
-                    FarmCard(
-                        farm = farm,
-                        onClick = { onFarmClick(farm.name) }
-                    )
+            when {
+                loading -> CircularProgressIndicator()
+
+                error != null -> Text("Error: $error", color = MaterialTheme.colorScheme.error)
+
+                farms.isEmpty() -> Text("No farms available.")
+
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(farms) { farm ->
+                            FarmCard(
+                                farm = farm,
+                                onClick = { onFarmClick(farm.id) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -97,60 +112,44 @@ fun FarmCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier.padding(12.dp)
         ) {
-            Image(
-                painter = painterResource(id = farm.imageRes),
-                contentDescription = farm.name,
-                modifier = Modifier
-                    .width(150.dp)
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Crop
-            )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(10.dp)
-            ) {
-                Text(
-                    text = farm.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = farm.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .weight(1f),
-                    maxLines = 2
-                )
-
-                Row(
+            // Farm Image
+            if (farm.imageUrl.isNotEmpty()) {
+                Image(
+                    painter = rememberAsyncImagePainter(farm.imageUrl),
+                    contentDescription = farm.name,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = farm.availability,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        text = farm.price,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = farm.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = farm.description,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            if (farm.price.isNotEmpty()) {
+                Text(
+                    text = "Price: ${farm.price}",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
             }
         }
     }

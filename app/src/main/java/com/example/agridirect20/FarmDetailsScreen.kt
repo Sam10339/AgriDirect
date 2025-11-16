@@ -4,16 +4,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.firestore.FirebaseFirestore
 
 data class ProductUi(
-    val id: String,
-    val name: String,
-    val price: Double,
-    val description: String
+    val id: String = "",
+    val name: String = "",
+    val price: Double = 0.0,
+    val description: String = ""
 )
 
 @Composable
@@ -22,62 +23,88 @@ fun FarmDetailsScreen(
     farmName: String,
     onAddToCart: (ProductUi) -> Unit
 ) {
-    val products = listOf(
-        ProductUi("carrots", "Carrots", 1.19, "Fresh carrots from $farmName."),
-        ProductUi("lettuce", "Lettuce", 1.60, "Crisp head lettuce grown locally."),
-        ProductUi("peppers", "Bell Peppers", 3.0, "Colorful peppers, great for cooking.")
-    )
+    val db = FirebaseFirestore.getInstance()
 
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var products by remember { mutableStateOf<List<ProductUi>>(emptyList()) }
+    var farmDescription by remember { mutableStateOf("Loading farm info…") }
+
+    // ---------- FIREBASE LOAD ----------
+    LaunchedEffect(farmName) {
+        loading = true
+        error = null
+
+        // Load farm info
+        db.collection("farms")
+            .document(farmName)
+            .get()
+            .addOnSuccessListener { doc ->
+                farmDescription = doc.getString("description") ?: "No description available."
+
+                // Load products
+                db.collection("farms")
+                    .document(farmName)
+                    .collection("products")
+                    .get()
+                    .addOnSuccessListener { productSnapshot ->
+                        products = productSnapshot.documents.map { d ->
+                            ProductUi(
+                                id = d.id,
+                                name = d.getString("name") ?: "Unnamed item",
+                                price = d.getDouble("price") ?: 0.0,
+                                description = d.getString("description") ?: ""
+                            )
+                        }
+                        loading = false
+                    }
+                    .addOnFailureListener { e ->
+                        error = "Failed to load products: ${e.message}"
+                        loading = false
+                    }
+
+            }
+            .addOnFailureListener { e ->
+                error = "Failed to load farm: ${e.message}"
+                loading = false
+            }
+    }
+
+    // ---------- UI ----------
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                Text(
-                    text = "Farm Banner Placeholder",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(8.dp)
+
+            Text(farmName, style = MaterialTheme.typography.headlineSmall)
+
+            Spacer(Modifier.height(8.dp))
+
+            when {
+                loading -> Text("Loading…")
+                error != null -> Text(
+                    text = error!!,
+                    color = MaterialTheme.colorScheme.error
                 )
-            }
+                else -> {
+                    Text(farmDescription)
 
-            Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(24.dp))
 
-            Text(
-                text = farmName,
-                style = MaterialTheme.typography.headlineSmall
-            )
+                    Text("Products", style = MaterialTheme.typography.titleMedium)
 
-            Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = "This is where farm details go (location, hours, description, etc.).",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                text = "Products",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(products) { product ->
-                    ProductCard(product = product, onAddToCart = onAddToCart)
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(products) { product ->
+                            ProductCard(product = product, onAddToCart = onAddToCart)
+                        }
+                    }
                 }
             }
         }
@@ -85,35 +112,15 @@ fun FarmDetailsScreen(
 }
 
 @Composable
-fun ProductCard(
-    product: ProductUi,
-    onAddToCart: (ProductUi) -> Unit
-) {
+fun ProductCard(product: ProductUi, onAddToCart: (ProductUi) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text(
-                text = product.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = product.description,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            Text(
-                text = String.format("$%.2f", product.price),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+        Column(Modifier.padding(12.dp)) {
+            Text(product.name, style = MaterialTheme.typography.titleMedium)
+            Text(product.description, style = MaterialTheme.typography.bodyMedium)
+            Text("$${product.price}", style = MaterialTheme.typography.labelMedium)
 
             Spacer(Modifier.height(8.dp))
 
@@ -123,4 +130,3 @@ fun ProductCard(
         }
     }
 }
-

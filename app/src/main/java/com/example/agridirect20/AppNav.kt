@@ -8,17 +8,21 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun AppNav() {
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Firebase instances
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
 
     // Shared cart state
     val cartItems = remember { mutableStateListOf<CartItem>() }
@@ -39,9 +43,7 @@ fun AppNav() {
         }
     }
 
-    fun clearCart() {
-        cartItems.clear()
-    }
+    fun clearCart() = cartItems.clear()
 
     Scaffold(
         bottomBar = {
@@ -50,11 +52,13 @@ fun AppNav() {
             }
         }
     ) { innerPadding ->
+
         NavHost(
             navController = navController,
-            startDestination = "signin",
+            startDestination = if (auth.currentUser == null) "signin" else "home",
             modifier = Modifier.padding(innerPadding)
         ) {
+
             composable("signin") {
                 SignInScreen(
                     onSignInSuccess = {
@@ -78,36 +82,36 @@ fun AppNav() {
             composable("farms") {
                 FarmsScreen(
                     navController = navController,
-                    onFarmClick = { farmName ->
-                        navController.navigate("farmDetails/$farmName")
+                    db = db,
+                    onFarmClick = { farmId ->
+                        navController.navigate("farmDetails/$farmId")
                     }
                 )
             }
 
             composable(
-                route = "farmDetails/{farmName}",
-                arguments = listOf(
-                    navArgument("farmName") { type = NavType.StringType }
-                )
+                route = "farmDetails/{farmId}",
+                arguments = listOf(navArgument("farmId") { type = NavType.StringType })
             ) { backStackEntry ->
-                val farmName = backStackEntry.arguments?.getString("farmName") ?: "Farm"
+                val farmId = backStackEntry.arguments?.getString("farmId") ?: "Farm"
+
                 FarmDetailsScreen(
                     navController = navController,
-                    farmName = farmName,
+                    farmName = farmId,
                     onAddToCart = { product -> addToCart(product) }
                 )
             }
 
             composable("markets") {
-                MarketsScreen(navController = navController)
+                MarketsScreen(navController)
             }
 
             composable("registerFarm") {
-                RegisterFarmScreen(navController = navController)
+                RegisterFarmScreen(navController)
             }
 
             composable("registerBooth") {
-                RegisterBoothScreen(navController = navController)
+                RegisterBoothScreen(navController)
             }
 
             composable("blog") {
@@ -121,24 +125,17 @@ fun AppNav() {
 
             composable(
                 route = "article/{articleId}",
-                arguments = listOf(
-                    navArgument("articleId") { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument("articleId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val articleId = backStackEntry.arguments?.getString("articleId") ?: "a1"
-                ArticleScreen(
-                    navController = navController,
-                    articleId = articleId
-                )
+                ArticleScreen(navController = navController, articleId = articleId)
             }
 
             composable("cart") {
                 CartScreen(
                     navController = navController,
                     cartItems = cartItems,
-                    onCheckout = {
-                        navController.navigate("checkout")
-                    }
+                    onCheckout = { navController.navigate("checkout") }
                 )
             }
 
@@ -160,19 +157,19 @@ fun AppNav() {
             }
 
             composable("favorites") {
-                FavoritesScreen(navController = navController)
+                FavoritesScreen(navController)
             }
 
             composable("settings") {
-                SettingsScreen(navController = navController)
+                SettingsScreen(navController)
             }
 
             composable("notifications") {
-                NotificationsScreen(navController = navController)
+                NotificationsScreen(navController)
             }
 
             composable("about") {
-                AboutScreen(navController = navController)
+                AboutScreen(navController)
             }
 
             composable("menu") {

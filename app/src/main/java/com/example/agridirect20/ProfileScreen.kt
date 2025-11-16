@@ -30,7 +30,7 @@ fun ProfileScreen(navController: NavController) {
             Spacer(modifier = Modifier.padding(top = 12.dp))
 
             Text(
-                text = "This is where user profile information will go (name, email, role, favorite farms, etc.).",
+                text = "User profile information will go here.",
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -38,15 +38,13 @@ fun ProfileScreen(navController: NavController) {
 
             AgriPrimaryButton(
                 onClick = {
-                    // Future: add real sign-out logic
                     navController.navigate("signin") {
                         popUpTo("home") { inclusive = true }
                     }
                 }
             ) {
-                Text("Sign Out (demo)")
+                Text("Sign Out")
             }
         }
     }
 }
-
