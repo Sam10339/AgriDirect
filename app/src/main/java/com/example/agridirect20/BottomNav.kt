@@ -1,55 +1,90 @@
 package com.example.agridirect20
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+
+data class BottomNavItem(
+    val route: String,
+    val label: String,
+    val iconRes: Int
+)
 
 @Composable
 fun BottomNavBar(navController: NavHostController) {
     val items = listOf(
-        "home",
-        "farms",
-        "blog",
-        "cart",
-        "menu"   // <-- last item is the menu icon
+        BottomNavItem(
+            route = "home",
+            label = "Home",
+            iconRes = R.drawable.ic_nav_home
+        ),
+        BottomNavItem(
+            route = "farms",
+            label = "Farms",
+            iconRes = R.drawable.ic_nav_farms
+        ),
+        BottomNavItem(
+            route = "blog",
+            label = "Blog",
+            iconRes = R.drawable.ic_nav_blog
+        ),
+        BottomNavItem(
+            route = "cart",
+            label = "Cart",
+            iconRes = R.drawable.ic_nav_cart
+        ),
+        BottomNavItem(
+            route = "menu",
+            label = "Menu",
+            iconRes = R.drawable.ic_nav_menu
+        )
     )
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        items.forEach { route ->
-            val (label, icon) = when (route) {
-                "home" -> "Home" to Icons.Filled.Home
-                "farms" -> "Farms" to Icons.Filled.Person   // you can later swap this for a Figma farm icon
-                "blog" -> "Blog" to Icons.Filled.Person    // swap later for a blog icon if you want
-                "cart" -> "Cart" to Icons.Filled.ShoppingCart
-                "menu" -> "Menu" to Icons.Filled.Menu      // this matches your designed menu slot
-                else -> route to Icons.Filled.Home
-            }
-
+        items.forEach { item ->
             NavigationBarItem(
-                selected = currentRoute == route,
-                onClick = { navController.navigate(route) },
+                selected = currentRoute == item.route,
+                onClick = {
+                    navController.navigate(item.route) {
+                        // avoid building up a huge back stack of the same destinations
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 icon = {
                     Icon(
-                        imageVector = icon,
-                        contentDescription = label
+                        painter = painterResource(id = item.iconRes),
+                        contentDescription = item.label
                     )
                 },
-                label = { Text(label) }
+                label = { Text(item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedTextColor = MaterialTheme.colorScheme.onPrimary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                    unselectedTextColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                )
             )
         }
     }
 }
+
 

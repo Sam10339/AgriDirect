@@ -5,34 +5,42 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 @Composable
 fun MainMenuScreen(
+    navController: NavController,
     onOpenProfile: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenNotifications: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Menu",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+    Scaffold(
+        topBar = { AgriTopBar(navController = navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Menu",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
 
-        MenuItemCard("Profile", onClick = onOpenProfile)
-        MenuItemCard("Settings", onClick = onOpenSettings)
-        MenuItemCard("Favorites", onClick = onOpenFavorites)
-        MenuItemCard("Notifications", onClick = onOpenNotifications)
+            MenuItemCard("Profile", onClick = onOpenProfile)
+            MenuItemCard("Settings", onClick = onOpenSettings)
+            MenuItemCard("Favorites", onClick = onOpenFavorites)
+            MenuItemCard("Notifications", onClick = onOpenNotifications)
+        }
     }
 }
 
@@ -46,13 +54,17 @@ fun MenuItemCard(
             .fillMaxWidth()
             .height(64.dp)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentAlignment = androidx.compose.ui.Alignment.CenterStart
+            contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = title,

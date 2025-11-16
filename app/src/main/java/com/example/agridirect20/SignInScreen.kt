@@ -1,5 +1,6 @@
 package com.example.agridirect20
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -28,13 +30,19 @@ fun SignInScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Logo / title
-            Text(
-                text = "AgriDirect",
-                style = MaterialTheme.typography.headlineSmall
+
+            // 🔥 BIG LOGO
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "AgriDirect Logo",
+                modifier = Modifier
+                    .size(180.dp) // Adjust size if needed
             )
 
-            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "AgriDirect",
+                style = MaterialTheme.typography.headlineMedium
+            )
 
             OutlinedTextField(
                 value = email,
@@ -56,43 +64,27 @@ fun SignInScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Error message (if any)
             if (errorMessage != null) {
                 Text(
                     text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Button(
+            AgriPrimaryButton(
                 onClick = {
-                    when {
-                        email.isBlank() || password.isBlank() ->
-                            errorMessage = "Please enter both email and password."
-                        !email.contains("@") ->
-                            errorMessage = "Please enter a valid email address."
-                        else -> {
-                            errorMessage = null
-                            // In a real app we'd check credentials; for now we just continue
-                            onSignInSuccess()
-                        }
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Please enter both email and password"
+                    } else {
+                        onSignInSuccess()
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Sign In")
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Recover account",
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }
+
 

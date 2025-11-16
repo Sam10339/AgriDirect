@@ -5,18 +5,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
-// Data class for farms
 data class FarmUi(
     val name: String,
     val description: String,
@@ -27,6 +24,7 @@ data class FarmUi(
 
 @Composable
 fun FarmsScreen(
+    navController: NavController,
     onFarmClick: (String) -> Unit
 ) {
     val farms = listOf(
@@ -60,27 +58,32 @@ fun FarmsScreen(
         )
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Local Farms",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 16.dp)
+    Scaffold(
+        topBar = { AgriTopBar(navController = navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            items(farms) { farm ->
-                FarmCard(
-                    farm = farm,
-                    onClick = { onFarmClick(farm.name) }
-                )
+            Text(
+                text = "Local Farms",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(farms) { farm ->
+                    FarmCard(
+                        farm = farm,
+                        onClick = { onFarmClick(farm.name) }
+                    )
+                }
             }
         }
     }
@@ -96,12 +99,15 @@ fun FarmCard(
             .fillMaxWidth()
             .height(150.dp)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     ) {
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Left image block with real farm/product image
             Image(
                 painter = painterResource(id = farm.imageRes),
                 contentDescription = farm.name,
