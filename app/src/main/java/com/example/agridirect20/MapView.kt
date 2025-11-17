@@ -138,7 +138,7 @@ fun MapScreen(){
     }
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize(0.7f), // Fraction of a full screen
+        modifier = Modifier.fillMaxSize(1f), // Fraction of a full screen
         cameraPositionState = cameraPositionState,
         properties = properties,
         uiSettings = uiSettings

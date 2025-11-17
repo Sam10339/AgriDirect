@@ -185,25 +185,15 @@ fun AppNav() {
                 ProfileScreen(navController = navController)
             }
 
-            composable("favorites") {
-                FavoritesScreen(navController = navController)
-            }
-
-            composable("settings") {
-                SettingsScreen(navController = navController)
-            }
-
-            composable("notifications") {
-                NotificationsScreen(navController = navController)
+            composable("about") {
+                AboutScreen(navController = navController)
             }
 
             composable("menu") {
                 MainMenuScreen(
                     navController = navController,
                     onOpenProfile = { navController.navigate("profile") },
-                    onOpenSettings = { navController.navigate("settings") },
-                    onOpenFavorites = { navController.navigate("favorites") },
-                    onOpenNotifications = { navController.navigate("notifications") }
+                    onOpenAbout = { navController.navigate("about") }
                 )
             }
 

@@ -11,23 +11,34 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun NotificationsScreen(navController: NavController) {
+fun AboutScreen(navController: NavController) {
+
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+
             Text(
-                text = "Notifications",
+                text = "About AgriDirect",
                 style = MaterialTheme.typography.headlineSmall
             )
+
             Text(
-                text = "Here you could show updates about deals, seasonal items, or orders.",
-                modifier = Modifier.padding(top = 8.dp),
+                text = "AgriDirect connects consumers with local farmers and markets, " +
+                        "providing easy access to fresh, sustainable, and community-grown produce.",
+                modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Version 1.0.0",
+                modifier = Modifier.padding(top = 24.dp),
+                style = MaterialTheme.typography.labelMedium
             )
         }
     }
