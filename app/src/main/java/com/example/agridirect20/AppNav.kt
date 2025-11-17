@@ -197,10 +197,6 @@ fun AppNav() {
                 NotificationsScreen(navController = navController)
             }
 
-            composable("about") {
-                AboutScreen(navController = navController)
-            }
-
             composable("menu") {
                 MainMenuScreen(
                     navController = navController,
