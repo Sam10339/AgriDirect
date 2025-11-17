@@ -188,4 +188,21 @@ object FirebaseFarmRepository {
                 )
             ).await()
     }
+    suspend fun decrementProductStock(
+        farmId: String,
+        productId: String,
+        quantityPurchased: Int
+    ) {
+        val productRef = farmsCollection
+            .document(farmId)
+            .collection("products")
+            .document(productId)
+
+        db.runTransaction { tx ->
+            val snapshot = tx.get(productRef)
+            val currentAmount = snapshot.getLong("amount")?.toInt() ?: 0
+            val newAmount = (currentAmount - quantityPurchased).coerceAtLeast(0)
+            tx.update(productRef, "amount", newAmount)
+        }.await()
+    }
 }

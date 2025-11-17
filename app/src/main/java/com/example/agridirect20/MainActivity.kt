@@ -41,23 +41,35 @@ fun AgriDirectHomeScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             HomeTile(
                 title = "Find Local Farms",
                 imageRes = R.drawable.home_farms,
                 onClick = onOpenFarms
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             HomeTile(
                 title = "Edit/Register Your Farm",
                 imageRes = R.drawable.home_register_farm,
                 onClick = onOpenRegisterFarm
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             HomeTile(
                 title = "Find Farmer's Market",
                 imageRes = R.drawable.home_markets,
                 onClick = onOpenMarkets
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
