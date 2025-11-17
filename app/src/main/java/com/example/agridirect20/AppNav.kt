@@ -71,6 +71,19 @@ fun AppNav() {
                 )
             }
 
+            composable(
+                route = "marketDetails/{venueId}",
+                arguments = listOf(
+                    navArgument("venueId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val venueId = backStackEntry.arguments?.getString("venueId") ?: ""
+                MarketDetailsScreen(
+                    navController = navController,
+                    venueId = venueId
+                )
+            }
+
             composable("signup") {
                 SignUpScreen(
                     onSignUpSuccess = {

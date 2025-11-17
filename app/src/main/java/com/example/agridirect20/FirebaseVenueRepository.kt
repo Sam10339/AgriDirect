@@ -1,8 +1,8 @@
 package com.example.agridirect20
 
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.firestore.getField
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
 
 object FirebaseVenueRepository {
@@ -11,7 +11,7 @@ object FirebaseVenueRepository {
     private val venuesCollection = db.collection("venues")
 
     /**
-     * Create a venue from Firestore.
+     * Create a venue in Firestore.
      */
     suspend fun createVenue(
         name: String,
@@ -22,29 +22,16 @@ object FirebaseVenueRepository {
 
         val venueData = hashMapOf(
             "name" to name.trim(),
-            "address" to address,
+            "address" to GeoPoint(address.latitude, address.longitude),
+            "createdByUserId" to userId
         )
 
         val venueRef = venuesCollection.add(venueData).await()
-        /**
-         * Holding onto this for as a reference for adding vendors to venues.
-         */
-//        val productDocs = mutableListOf<Product>()
-//        for (product in products) {
-//            val productData = hashMapOf(
-//                "name" to product.name.trim(),
-//                "description" to product.description.trim(),
-//                "price" to product.price,
-//                "amount" to product.amount
-//            )
-//            val prodRef = farmRef.collection("products").add(productData).await()
-//            productDocs.add(product.copy(id = prodRef.id))
-//        }
 
         return Venue(
             id = venueRef.id,
             name = name.trim(),
-            address = address,
+            address = address
         )
     }
 
@@ -58,16 +45,17 @@ object FirebaseVenueRepository {
             .await()
 
         return snapshot.documents.map { doc ->
+            val geo = doc.getGeoPoint("address") ?: GeoPoint(0.0, 0.0)
             Venue(
                 id = doc.id,
                 name = doc.getString("name") ?: "",
-                address = doc.getField("address") ?: LatLng(0.0, 0.0)
+                address = LatLng(geo.latitude, geo.longitude)
             )
         }
     }
 
     /**
-     * Get all venues for.
+     * Get all venues (for map + list).
      */
     suspend fun getVenues(): List<Venue> {
         val snapshot = venuesCollection
@@ -75,11 +63,34 @@ object FirebaseVenueRepository {
             .await()
 
         return snapshot.documents.map { doc ->
+            val geo = doc.getGeoPoint("address") ?: GeoPoint(0.0, 0.0)
             Venue(
                 id = doc.id,
                 name = doc.getString("name") ?: "",
-                address = doc.getField("address") ?: LatLng(0.0, 0.0)
+                address = LatLng(geo.latitude, geo.longitude)
             )
         }
+    }
+
+    /**
+     * Get a single venue by id (for MarketDetails screen).
+     */
+    suspend fun getVenueById(venueId: String): Venue? {
+        if (venueId.isBlank()) return null
+
+        val doc = venuesCollection
+            .document(venueId)
+            .get()
+            .await()
+
+        if (!doc.exists()) return null
+
+        val geo = doc.getGeoPoint("address") ?: GeoPoint(0.0, 0.0)
+
+        return Venue(
+            id = doc.id,
+            name = doc.getString("name") ?: "",
+            address = LatLng(geo.latitude, geo.longitude)
+        )
     }
 }
