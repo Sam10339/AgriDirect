@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 data class CartItem(
+    val farmId: String,
+    val productId: String,
     val productName: String,
     val price: Double,
     val quantity: Int

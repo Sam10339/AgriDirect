@@ -130,6 +130,11 @@ fun ManageFarmEditor(
 
         Text("Products", style = MaterialTheme.typography.titleMedium)
 
+        Spacer(Modifier.height(8.dp))
+        AddNewProductSection(onAdd = onAddProduct)
+
+        Spacer(Modifier.height(16.dp))
+
         farm.products.forEach { product ->
             ProductEditor(
                 product = product,
@@ -137,10 +142,6 @@ fun ManageFarmEditor(
                 onDelete = onDeleteProduct
             )
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        AddNewProductSection(onAdd = onAddProduct)
     }
 }
 

@@ -111,9 +111,10 @@ fun FarmDetailsScreen(
                                 ProductCardForDetails(
                                     product = product,
                                     onAddToCart = { p ->
-                                        // Convert Firebase Product -> ProductUi for your cart
                                         onAddToCart(
                                             ProductUi(
+                                                farmId = farmId,   // from FarmDetailsScreen parameter
+                                                productId = p.id,  // from your Product model
                                                 name = p.name,
                                                 price = p.price
                                             )

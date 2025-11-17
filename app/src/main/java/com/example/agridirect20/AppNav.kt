@@ -24,13 +24,16 @@ fun AppNav() {
     val cartItems = remember { mutableStateListOf<CartItem>() }
 
     fun addToCart(product: ProductUi) {
-        val existingIndex = cartItems.indexOfFirst { it.productName == product.name }
+        // One cart line per productId
+        val existingIndex = cartItems.indexOfFirst { it.productId == product.productId }
         if (existingIndex >= 0) {
             val existing = cartItems[existingIndex]
             cartItems[existingIndex] = existing.copy(quantity = existing.quantity + 1)
         } else {
             cartItems.add(
                 CartItem(
+                    farmId = product.farmId,
+                    productId = product.productId,
                     productName = product.name,
                     price = product.price,
                     quantity = 1
