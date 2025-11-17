@@ -11,7 +11,7 @@ object FirebaseVenueRepository {
     private val venuesCollection = db.collection("venues")
 
     /**
-     * Create a venue from Firestore.
+     * Lets a user create a venue. Not currently used, but handles some of the declarations.
      */
     suspend fun createVenue(
         name: String,
@@ -27,7 +27,7 @@ object FirebaseVenueRepository {
 
         val venueRef = venuesCollection.add(venueData).await()
         /**
-         * Holding onto this for as a reference for adding vendors to venues.
+         * Holding onto this for as a reference for adding vendors to venues, if we get to that.
          */
 //        val productDocs = mutableListOf<Product>()
 //        for (product in products) {
@@ -48,6 +48,9 @@ object FirebaseVenueRepository {
         )
     }
 
+    /**
+     * Get venues that the current user has made. Not currently used.
+     */
     suspend fun getVenuesForCurrentUser(): List<Venue> {
         val userId = AuthManager.currentUser?.uid
             ?: throw IllegalStateException("User must be signed in")
@@ -67,7 +70,7 @@ object FirebaseVenueRepository {
     }
 
     /**
-     * Get all venues for.
+     * Get all venues.
      */
     suspend fun getVenues(): List<Venue> {
         val snapshot = venuesCollection
