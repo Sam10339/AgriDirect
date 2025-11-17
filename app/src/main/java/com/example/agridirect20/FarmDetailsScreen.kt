@@ -4,80 +4,126 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
-data class ProductUi(
-    val id: String,
-    val name: String,
-    val price: Double,
-    val description: String
-)
+import kotlinx.coroutines.launch
 
 @Composable
 fun FarmDetailsScreen(
     navController: NavController,
-    farmName: String,
+    farmId: String,
     onAddToCart: (ProductUi) -> Unit
 ) {
-    val products = listOf(
-        ProductUi("carrots", "Carrots", 1.19, "Fresh carrots from $farmName."),
-        ProductUi("lettuce", "Lettuce", 1.60, "Crisp head lettuce grown locally."),
-        ProductUi("peppers", "Bell Peppers", 3.0, "Colorful peppers, great for cooking.")
-    )
+    var farm by remember { mutableStateOf<Farm?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(farmId) {
+        scope.launch {
+            try {
+                isLoading = true
+                farm = FirebaseFarmRepository.getFarmWithProducts(farmId)
+            } catch (e: Exception) {
+                errorMessage = "Failed to load farm details: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     Scaffold(
-        topBar = { AgriTopBar(navController = navController) }
+        topBar = {
+            AgriTopBar(navController = navController)
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {
-                Text(
-                    text = "Farm Banner Placeholder",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+            when {
+                isLoading -> {
+                    Text("Loading...", style = MaterialTheme.typography.bodyMedium)
+                }
 
-            Spacer(Modifier.height(16.dp))
+                errorMessage != null -> {
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
 
-            Text(
-                text = farmName,
-                style = MaterialTheme.typography.headlineSmall
-            )
+                farm == null -> {
+                    Text(
+                        text = "Farm not found.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
 
-            Spacer(Modifier.height(8.dp))
+                else -> {
+                    val f = farm!!
 
-            Text(
-                text = "This is where farm details go (location, hours, description, etc.).",
-                style = MaterialTheme.typography.bodyMedium
-            )
+                    Text(
+                        text = f.name,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
 
-            Spacer(Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Products",
-                style = MaterialTheme.typography.titleMedium
-            )
+                    Text(
+                        text = f.description,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
 
-            Spacer(Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(products) { product ->
-                    ProductCard(product = product, onAddToCart = onAddToCart)
+                    Text(
+                        text = "ZIP: ${f.zip}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Available Products",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    if (f.products.isEmpty()) {
+                        Text(
+                            text = "No products listed yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(f.products) { product ->
+                                ProductCardForDetails(
+                                    product = product,
+                                    onAddToCart = { p ->
+                                        onAddToCart(
+                                            ProductUi(
+                                                farmId = farmId,   // from FarmDetailsScreen parameter
+                                                productId = p.id,  // from your Product model
+                                                name = p.name,
+                                                price = p.price
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -85,39 +131,43 @@ fun FarmDetailsScreen(
 }
 
 @Composable
-fun ProductCard(
-    product: ProductUi,
-    onAddToCart: (ProductUi) -> Unit
+fun ProductCardForDetails(
+    product: Product,
+    onAddToCart: (Product) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = product.name,
                 style = MaterialTheme.typography.titleMedium
             )
+            if (product.description.isNotBlank()) {
+                Text(
+                    text = product.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
             Text(
-                text = product.description,
+                text = "Price: $${product.price}",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 4.dp)
             )
             Text(
-                text = String.format("$%.2f", product.price),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(top = 8.dp)
+                text = "In stock: ${product.amount}",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 2.dp)
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            Button(onClick = { onAddToCart(product) }) {
+            Button(
+                onClick = { onAddToCart(product) },
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth()
+            ) {
                 Text("Add to Cart")
             }
         }

@@ -3,16 +3,16 @@ package com.example.agridirect20
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 
 @Composable
 fun CheckoutScreen(
@@ -21,6 +21,9 @@ fun CheckoutScreen(
     onOrderPlaced: () -> Unit
 ) {
     val total = cartItems.sumOf { it.price * it.quantity }
+    val scope = rememberCoroutineScope()
+    var isPlacingOrder by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -92,13 +95,45 @@ fun CheckoutScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
 
+                if (errorMessage != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
                 Spacer(Modifier.height(12.dp))
 
                 AgriPrimaryButton(
-                    onClick = onOrderPlaced,
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        scope.launch {
+                            isPlacingOrder = true
+                            errorMessage = null
+                            try {
+                                // Update stock in Firebase for each item
+                                cartItems.forEach { item ->
+                                    FirebaseFarmRepository.decrementProductStock(
+                                        farmId = item.farmId,
+                                        productId = item.productId,
+                                        quantityPurchased = item.quantity
+                                    )
+                                }
+
+                                // After successful stock updates
+                                onOrderPlaced()
+                            } catch (e: Exception) {
+                                errorMessage = "Failed to place order: ${e.message}"
+                            } finally {
+                                isPlacingOrder = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isPlacingOrder && cartItems.isNotEmpty()
                 ) {
-                    Text("Place Order")
+                    Text(if (isPlacingOrder) "Placing Order..." else "Place Order")
                 }
             }
         }
