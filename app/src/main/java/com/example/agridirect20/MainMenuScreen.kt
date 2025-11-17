@@ -17,9 +17,8 @@ import androidx.navigation.NavController
 fun MainMenuScreen(
     navController: NavController,
     onOpenProfile: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenFavorites: () -> Unit,
-    onOpenNotifications: () -> Unit
+    onOpenAbout: () -> Unit,
+
 ) {
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -37,9 +36,7 @@ fun MainMenuScreen(
             )
 
             MenuItemCard("Profile", onClick = onOpenProfile)
-            MenuItemCard("Settings", onClick = onOpenSettings)
-            MenuItemCard("Favorites", onClick = onOpenFavorites)
-            MenuItemCard("Notifications", onClick = onOpenNotifications)
+            MenuItemCard("About", onClick = onOpenAbout)
         }
     }
 }
