@@ -7,6 +7,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
+/**
+ * A reusable primary action button used throughout the AgriDirect app.
+ *
+ * Applies the app's primary color scheme for consistent UI styling.
+ * Wraps  Button with predefined colors and predictable behavior.
+ *
+ * Usage Example:
+ * ```
+ * AgriPrimaryButton(
+ *     onClick = { /* handle action */ }
+ * ) {
+ *     Text("Submit")
+ * }
+ * ```
+ */
 @Composable
 fun AgriPrimaryButton(
     onClick: () -> Unit,

@@ -145,12 +145,12 @@ fun MapScreen(){
         properties = properties,
         uiSettings = uiSettings
     ) { for (item in venues) { //Creating markers from the list of venues pulled form the database.
-            val latitude = item.address.latitude //Converting GeoPoint to LatLng
-            val longitude = item.address.longitude
-            Marker( //Creating the marker.
-                state = rememberMarkerState(position = (LatLng(latitude, longitude))),
-                title = item.name
-            )
-        }
+        val latitude = item.address.latitude //Converting GeoPoint to LatLng
+        val longitude = item.address.longitude
+        Marker( //Creating the marker.
+            state = rememberMarkerState(position = (LatLng(latitude, longitude))),
+            title = item.name
+        )
+    }
     }
 }

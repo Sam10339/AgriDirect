@@ -12,7 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
+/**
+ * Represents one item inside the shopping cart.
+ *
+ * @param farmId ID of the farm the product belongs to.
+ * @param productId Unique ID of the product.
+ * @param productName Name of the product.
+ * @param price Item price (each).
+ * @param quantity How many units were added to the cart.
+ *
+ * USAGE:
+ * CartItem("farm1", "prod1", "Tomatoes", 2.50, 3)
+ */
 data class CartItem(
     val farmId: String,
     val productId: String,
@@ -20,7 +31,21 @@ data class CartItem(
     val price: Double,
     val quantity: Int
 )
-
+/**
+ * Shopping cart screen showing all added items, the total cost,
+ * and a button to navigate to the checkout screen.
+ *
+ * @param navController Navigation controller for screen changes.
+ * @param cartItems List of items currently in the cart (from AppNav shared state).
+ * @param onCheckout Triggered when the user presses "Proceed to Checkout."
+ *
+ * USAGE (AppNav):
+ * composable("cart") {
+ *     CartScreen(navController, cartItems) {
+ *         navController.navigate("checkout")
+ *     }
+ * }
+ */
 @Composable
 fun CartScreen(
     navController: NavController,
@@ -44,6 +69,7 @@ fun CartScreen(
             )
 
             Spacer(Modifier.height(16.dp))
+            // Empty cart message
 
             if (cartItems.isEmpty()) {
                 Text(
@@ -51,6 +77,8 @@ fun CartScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
+                // List of cart items
+
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -63,6 +91,7 @@ fun CartScreen(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                // Total cost row
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -79,6 +108,7 @@ fun CartScreen(
                 }
 
                 Spacer(Modifier.height(12.dp))
+                // Checkout button
 
                 AgriPrimaryButton(
                     onClick = onCheckout,
@@ -90,7 +120,12 @@ fun CartScreen(
         }
     }
 }
-
+/**
+ * Displays a single cart item with name, quantity, price, and line total.
+ *
+ * USAGE:
+ * CartItemCard(item = CartItem("farm1", "p1", "Carrots", 1.99, 2))
+ */
 @Composable
 fun CartItemCard(item: CartItem) {
     Card(

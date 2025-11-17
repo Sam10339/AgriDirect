@@ -13,13 +13,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * ArticleScreen displays long-form article content based on an article ID.
+ *
+ * This screen retrieves article text from a small set of predefined
+ * in-app articles ("a1", "a2", "a3"). Each article is represented
+ * by a title and a body of text. If the provided ID does not match
+ * any known article, a default placeholder article is shown.
+ *
+ * The content is scrollable and wrapped inside a Scaffold with the shared
+ * AgriTopBar at the top.
+ *
+ * @param navController Navigation controller used for navigating between screens.
+ * @param articleId A string identifier determining which article to display.
+ *
+ * Usage example:
+ * navController.navigate("article/a1")
+ */
 @Composable
 fun ArticleScreen(
     navController: NavController,
     articleId: String
 ) {
-    // Simple placeholder content based on articleId
+    // Selects a title + body based on the article ID
     val (title, body) = when (articleId) {
+
         "a1" -> "The Benefits and Basics of Home Gardening" to
                 "Home gardening has become increasingly popular in recent years, offering individuals a rewarding way to grow their own food, improve well-being, and contribute to environmental sustainability. Whether practiced in a backyard, on a balcony, or even indoors, gardening provides both practical and personal benefits that extend far beyond the harvest.\n" +
                 "\n" +
@@ -33,6 +51,7 @@ fun ArticleScreen(
                 "Getting started with home gardening is accessible to nearly everyone. Beginners can start small with container gardens or raised beds, focusing on easy-to-grow crops such as herbs, lettuce, or peppers. Success comes from choosing plants suited to the local climate, preparing nutrient-rich soil, and providing consistent watering. With experience, gardeners can experiment with crop rotation, organic pest control, and seasonal planting schedules.\n" +
                 "\n" +
                 "Ultimately, home gardening is more than just a hobby; it is a lifestyle that promotes health, sustainability, and community. By cultivating a personal garden space, individuals gain fresh produce, save money, reduce their environmental footprint, and enjoy the many mental and physical benefits of working with the earth. In a world where many are disconnected from the origins of their food, home gardening offers a simple yet powerful way to reconnect with nature and foster a more sustainable future."
+
         "a2" -> "The Importance of Water Conservation" to
                 "Water is one of the most vital resources on Earth, yet it is often taken for granted. With growing populations, climate change, and increasing demand, conserving water has become a global necessity. Water conservation is not only about saving money on utility bills; it is about protecting ecosystems, ensuring clean water for future generations, and maintaining the balance of our natural environment.\n" +
                 "\n" +
@@ -46,8 +65,8 @@ fun ArticleScreen(
                 "\n" +
                 "Education plays an important role as well. Teaching children and communities about the value of water encourages long-term cultural shifts toward conservation. When individuals recognize that their actions matter, they are more likely to adopt sustainable practices and advocate for broader water-saving policies.\n" +
                 "\n" +
-                "In conclusion, water conservation is essential for addressing scarcity, reducing energy use, protecting ecosystems, and ensuring a sustainable future. Every drop saved contributes to the health of our planet and the well-being of future generations. By making simple changes in our daily lives, we can collectively make a profound difference.\n" +
-                "\n"
+                "In conclusion, water conservation is essential for addressing scarcity, reducing energy use, protecting ecosystems, and ensuring a sustainable future. Every drop saved contributes to the health of our planet and the well-being of future generations. By making simple changes in our daily lives, we can collectively make a profound difference.\n"
+
         "a3" -> "The Value of Natural Fertilizers" to
                 "Fertilizers play a vital role in agriculture and gardening, providing plants with the nutrients they need to grow strong and healthy. While chemical or synthetic fertilizers have become common in modern farming, natural fertilizers are increasingly valued for their sustainability, safety, and long-term benefits to both crops and the environment. Natural fertilizers are derived from organic materials such as compost, manure, bone meal, or plant residues, and they offer a balanced way to enrich soil health while reducing harmful impacts.\n" +
                 "\n" +
@@ -61,8 +80,8 @@ fun ArticleScreen(
                 "\n" +
                 "Getting started with natural fertilizers is simple. Composting food scraps, using grass clippings as mulch, or adding well-aged manure to garden beds are all effective ways to boost soil fertility. Each method provides essential nutrients like nitrogen, phosphorus, and potassium, while also enhancing the overall quality of the soil. For small-scale gardeners, natural fertilizers are both accessible and rewarding.\n" +
                 "\n" +
-                "In conclusion, natural fertilizers represent a sustainable, safe, and effective alternative to synthetic products. They support soil health, reduce environmental harm, promote nutritious crops, and often cost less in the long run. By choosing natural options, farmers and gardeners alike contribute to a healthier planet and more resilient food systems.\n" +
-                "\n"
+                "In conclusion, natural fertilizers represent a sustainable, safe, and effective alternative to synthetic products. They support soil health, reduce environmental harm, promote nutritious crops, and often cost less in the long run. By choosing natural options, farmers and gardeners alike contribute to a healthier planet and more resilient food systems.\n"
+
         else -> "Article" to
                 "This is where the full article content will appear."
     }

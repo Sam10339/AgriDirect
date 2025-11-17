@@ -3,13 +3,34 @@ package com.example.agridirect20
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+/**
+ * FirebaseFarmRepository
+ *
+ * Centralized Firestore helper for all farm-related database operations.
+ *
+ * Responsibilities:
+ * - Create farms and their products
+ * - Load farms by ZIP, by user, or by ID with full product list
+ * - Update farm or product info
+ * - Add / delete products
+ * - Decrement stock when orders are placed
+ *
+ * USAGE EXAMPLE (inside ViewModel / Composable with coroutine):
+ *
+ * val farms = FirebaseFarmRepository.getFarmsByZip("53144")
+ * val farm = FirebaseFarmRepository.getFarmWithProducts(farmId)
+ * FirebaseFarmRepository.updateFarm(farmId, "New Name", "Desc", "53144")
+ */
 object FirebaseFarmRepository {
 
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
     private val farmsCollection = db.collection("farms")
 
     /**
-     * Create a farm + its products in Firestore.
+     * Create a new farm in Firestore, then create all of its products
+     * under /farms/{farmId}/products.
+     *
+     * Used by RegisterFarmScreen.
      */
     suspend fun createFarmWithProducts(
         name: String,
@@ -20,6 +41,7 @@ object FirebaseFarmRepository {
         val userId = AuthManager.currentUser?.uid
             ?: throw IllegalStateException("User must be signed in to create a farm")
 
+        // Base farm data stored at /farms/{id}
         val farmData = hashMapOf(
             "name" to name.trim(),
             "description" to description.trim(),
@@ -29,6 +51,7 @@ object FirebaseFarmRepository {
 
         val farmRef = farmsCollection.add(farmData).await()
 
+        // Create each product under subcollection
         val productDocs = mutableListOf<Product>()
         for (product in products) {
             val productData = hashMapOf(
@@ -50,6 +73,11 @@ object FirebaseFarmRepository {
             products = productDocs
         )
     }
+
+    /**
+     * Load only the farms created by the currently signed-in user.
+     * Used in MyFarmsScreen.
+     */
     suspend fun getFarmsForCurrentUser(): List<Farm> {
         val userId = AuthManager.currentUser?.uid
             ?: throw IllegalStateException("User must be signed in")
@@ -66,13 +94,14 @@ object FirebaseFarmRepository {
                 description = doc.getString("description") ?: "",
                 zip = doc.getString("zip") ?: "",
                 createdByUserId = userId,
-                products = emptyList() // we can load full details later
+                products = emptyList() // full details loaded separately if needed
             )
         }
     }
 
     /**
-     * Get all farms for a given ZIP code.
+     * Return all farms matching a ZIP code.
+     * Used in FarmsScreen search.
      */
     suspend fun getFarmsByZip(zip: String): List<Farm> {
         val snapshot = farmsCollection
@@ -87,13 +116,14 @@ object FirebaseFarmRepository {
                 description = doc.getString("description") ?: "",
                 zip = doc.getString("zip") ?: "",
                 createdByUserId = doc.getString("createdByUserId") ?: "",
-                products = emptyList() // details loaded separately if needed
+                products = emptyList()
             )
         }
     }
 
     /**
-     * Get a single farm + all its products (for a farm details screen later).
+     * Load a farm AND all its products.
+     * Used by FarmDetailsScreen.
      */
     suspend fun getFarmWithProducts(farmId: String): Farm? {
         val farmDoc = farmsCollection.document(farmId).get().await()
@@ -128,6 +158,10 @@ object FirebaseFarmRepository {
             products = products
         )
     }
+
+    /**
+     * Update basic farm information in Firestore.
+     */
     suspend fun updateFarm(
         farmId: String,
         name: String,
@@ -142,6 +176,10 @@ object FirebaseFarmRepository {
             )
         ).await()
     }
+
+    /**
+     * Update an existing product under /farms/{id}/products/{productId}.
+     */
     suspend fun updateProduct(
         farmId: String,
         product: Product
@@ -160,6 +198,9 @@ object FirebaseFarmRepository {
             ).await()
     }
 
+    /**
+     * Delete a product from a farm.
+     */
     suspend fun deleteProduct(
         farmId: String,
         productId: String
@@ -172,6 +213,9 @@ object FirebaseFarmRepository {
             .await()
     }
 
+    /**
+     * Add a new product to a farm.
+     */
     suspend fun addProductToFarm(
         farmId: String,
         product: Product
@@ -188,6 +232,11 @@ object FirebaseFarmRepository {
                 )
             ).await()
     }
+
+    /**
+     * Decrease stock for a product using a Firestore transaction.
+     * Called in CheckoutScreen when placing an order.
+     */
     suspend fun decrementProductStock(
         farmId: String,
         productId: String,

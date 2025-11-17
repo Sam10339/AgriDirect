@@ -15,6 +15,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.agridirect20.ui.theme.AgriDirectTheme
 
+/**
+ * MainActivity
+ *
+ * Entry point of the app. Sets the app theme and loads the navigation graph.
+ *
+ * Usage:
+ *
+ * - Called automatically when the app launches.
+ * - Displays AppNav(), which manages all screens/routes.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +36,25 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * AgriDirectHomeScreen
+ *
+ * The home dashboard shown after sign-in. Lets users:
+ * - Search for farms
+ * - Register or edit their own farm
+ * - Search for farmers’ markets
+ *
+ * Navigation is handled by callbacks passed from AppNav().
+ *
+ * Usage Example (from AppNav):
+ *
+ * AgriDirectHomeScreen(
+ *     navController,
+ *     onOpenFarms = { navController.navigate("farms") },
+ *     onOpenMarkets = { navController.navigate("markets") },
+ *     onOpenRegisterFarm = { navController.navigate("myFarms") }
+ * )
+ */
 @Composable
 fun AgriDirectHomeScreen(
     navController: NavController,
@@ -34,7 +63,7 @@ fun AgriDirectHomeScreen(
     onOpenRegisterFarm: () -> Unit,
 ) {
     Scaffold(
-        topBar = {}
+        topBar = {} // No top bar on home screen (clean landing page)
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -74,6 +103,22 @@ fun AgriDirectHomeScreen(
     }
 }
 
+/**
+ * HomeTile
+ *
+ * Reusable clickable card for the home screen.
+ *
+ * Parameters:
+ *  - title: Text label shown on the card
+ *  - imageRes: Illustration shown on the left
+ *  - onClick: Action when the tile is tapped (usually navigates to another screen)
+ *
+ * Usage:
+ *
+ * HomeTile("Find Local Farms", R.drawable.home_farms) {
+ *     navController.navigate("farms")
+ * }
+ */
 @Composable
 fun HomeTile(
     title: String,

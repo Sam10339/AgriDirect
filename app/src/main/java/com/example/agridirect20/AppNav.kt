@@ -8,27 +8,37 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 
+/**
+ * Central navigation graph for the entire app.
+ * Manages:
+ * - NavController
+ * - Screen routes
+ * - Shared cart state across screens
+ *
+ * Usage:
+ * ```
+ * setContent { AppNav() }
+ * ```
+ */
 @Composable
 fun AppNav() {
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
-    // Shared cart state
+    /* Main navigation controller */
+    val navController = rememberNavController()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    /* Shared cart state accessible by FarmDetails, Cart, Checkout */
     val cartItems = remember { mutableStateListOf<CartItem>() }
 
+    /** Add an item or increment quantity if it already exists */
     fun addToCart(product: ProductUi) {
-        // One cart line per productId
-        val existingIndex = cartItems.indexOfFirst { it.productId == product.productId }
-        if (existingIndex >= 0) {
-            val existing = cartItems[existingIndex]
-            cartItems[existingIndex] = existing.copy(quantity = existing.quantity + 1)
+        val index = cartItems.indexOfFirst { it.productId == product.productId }
+        if (index >= 0) {
+            val existing = cartItems[index]
+            cartItems[index] = existing.copy(quantity = existing.quantity + 1)
         } else {
             cartItems.add(
                 CartItem(
@@ -42,27 +52,34 @@ fun AppNav() {
         }
     }
 
-    fun clearCart() {
-        cartItems.clear()
-    }
+    /** Empty the cart after a successful order */
+    fun clearCart() = cartItems.clear()
 
     Scaffold(
+        /* Hide bottom nav on login screen */
         bottomBar = {
             if (currentRoute != "signin") {
                 BottomNavBar(navController)
             }
         }
     ) { innerPadding ->
+
+        /* Root of all app navigation */
         NavHost(
             navController = navController,
             startDestination = "signin",
             modifier = Modifier.padding(innerPadding)
         ) {
+
+
+            // AUTH FLOW
+
+
             composable("signin") {
                 SignInScreen(
                     onSignInSuccess = {
                         navController.navigate("home") {
-                            popUpTo("signin") { inclusive = true }
+                            popUpTo("signin") { inclusive = true } // remove login from backstack
                         }
                     },
                     onNavigateToSignUp = {
@@ -78,93 +95,82 @@ fun AppNav() {
                             popUpTo("signin") { inclusive = true }
                         }
                     },
-                    onNavigateToSignIn = {
-                        navController.popBackStack()
-                    }
+                    onNavigateToSignIn = { navController.popBackStack() }
                 )
             }
+
+
+            // MAIN HOME + SECTIONS
+
 
             composable("home") {
                 AgriDirectHomeScreen(
                     navController = navController,
-                    onOpenFarms = { navController.navigate("farms") },
+                    onOpenFarms  = { navController.navigate("farms") },
                     onOpenMarkets = { navController.navigate("markets") },
-                    onOpenRegisterFarm = { navController.navigate("myFarms") },
-                                    )
+                    onOpenRegisterFarm = { navController.navigate("myFarms") }
+                )
             }
 
-            composable("farms") {
-                FarmsScreen(navController = navController)
-            }
+            composable("farms") { FarmsScreen(navController) }
 
+            // Farm details page with products
             composable(
                 route = "farmDetails/{farmId}",
-                arguments = listOf(
-                    navArgument("farmId") { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument("farmId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val farmId = backStackEntry.arguments?.getString("farmId") ?: ""
                 FarmDetailsScreen(
                     navController = navController,
                     farmId = farmId,
-                    onAddToCart = { product -> addToCart(product) }
+                    onAddToCart = { addToCart(it) }
                 )
             }
 
-            composable("myFarms") {
-                MyFarmsScreen(navController = navController)
-            }
+            // My farms (farmer section)
+            composable("myFarms") { MyFarmsScreen(navController) }
 
             composable(
                 route = "manageFarm/{farmId}",
-                arguments = listOf(
-                    navArgument("farmId") { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument("farmId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val farmId = backStackEntry.arguments?.getString("farmId") ?: ""
-                ManageFarmScreen(
-                    navController = navController,
-                    farmId = farmId
-                )
+                ManageFarmScreen(navController, farmId)
             }
 
-            composable("markets") {
-                MarketsScreen(navController = navController)
-            }
+            composable("markets") { MarketsScreen(navController) }
+            composable("registerFarm") { RegisterFarmScreen(navController) }
 
-            composable("registerFarm") {
-                RegisterFarmScreen(navController = navController)
-            }
+
+            // BLOG + ARTICLES
+
 
             composable("blog") {
                 BlogScreen(
                     navController = navController,
-                    onArticleClick = { articleId ->
-                        navController.navigate("article/$articleId")
-                    }
+                    onArticleClick = { id -> navController.navigate("article/$id") }
                 )
             }
 
             composable(
                 route = "article/{articleId}",
-                arguments = listOf(
-                    navArgument("articleId") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val articleId = backStackEntry.arguments?.getString("articleId") ?: "a1"
+                arguments = listOf(navArgument("articleId") { type = NavType.StringType })
+            ) { entry ->
                 ArticleScreen(
                     navController = navController,
-                    articleId = articleId
+                    articleId = entry.arguments?.getString("articleId") ?: "a1"
                 )
             }
+
+
+            // CART + CHECKOUT
+
 
             composable("cart") {
                 CartScreen(
                     navController = navController,
                     cartItems = cartItems,
-                    onCheckout = {
-                        navController.navigate("checkout")
-                    }
+                    onCheckout = { navController.navigate("checkout") }
                 )
             }
 
@@ -181,32 +187,18 @@ fun AppNav() {
                 )
             }
 
-            composable("profile") {
-                ProfileScreen(navController = navController)
-            }
 
-            composable("about") {
-                AboutScreen(navController = navController)
-            }
+            // PROFILE + INFO
+
+
+            composable("profile") { ProfileScreen(navController) }
+            composable("about")   { AboutScreen(navController) }
 
             composable("menu") {
                 MainMenuScreen(
                     navController = navController,
                     onOpenProfile = { navController.navigate("profile") },
                     onOpenAbout = { navController.navigate("about") }
-                )
-            }
-
-            composable(
-                route = "manageFarm/{farmId}",
-                arguments = listOf(
-                    navArgument("farmId") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val farmId = backStackEntry.arguments?.getString("farmId") ?: ""
-                ManageFarmScreen(
-                    navController = navController,
-                    farmId = farmId
                 )
             }
         }

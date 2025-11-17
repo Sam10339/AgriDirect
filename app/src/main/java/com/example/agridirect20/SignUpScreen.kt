@@ -11,15 +11,31 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+/**
+ * SignUpScreen
+ *
+ * Displays the account creation UI for new AgriDirect users.
+ * Handles email + password input, Firebase authentication via AuthManager,
+ * and basic loading/error states. On successful registration, the parent
+ * composable navigates forward to the app's main content.
+ *
+ * @param onSignUpSuccess Callback triggered after successful account creation.
+ * @param onNavigateToSignIn Callback to navigate back to the sign-in screen.
+ */
 @Composable
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
     onNavigateToSignIn: () -> Unit
 ) {
+    // State values for user input
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // Error and loading indicators
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    // Coroutine scope for async Firebase operations
     val scope = rememberCoroutineScope()
 
     Scaffold { innerPadding ->
@@ -31,7 +47,8 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Centered logo at top
+
+            // Application logo (centered)
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "AgriDirect Logo",
@@ -40,18 +57,20 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Header text
             Text("Create Account", style = MaterialTheme.typography.headlineSmall)
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Email input field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
 
+            // Password input field with hidden characters
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -62,6 +81,7 @@ fun SignUpScreen(
                     .padding(top = 12.dp)
             )
 
+            // Error message displayed under inputs (if any)
             if (errorMessage != null) {
                 Text(
                     text = errorMessage!!,
@@ -70,15 +90,18 @@ fun SignUpScreen(
                 )
             }
 
+            // Sign-up button triggers Firebase registration
             Button(
                 onClick = {
                     errorMessage = null
                     scope.launch {
                         try {
                             isLoading = true
+                            // Attempt account creation
                             AuthManager.signUp(email.trim(), password.trim())
                             onSignUpSuccess()
                         } catch (e: Exception) {
+                            // Display readable error message
                             errorMessage = e.message ?: "Failed to sign up"
                         } finally {
                             isLoading = false
@@ -93,6 +116,7 @@ fun SignUpScreen(
                 Text(if (isLoading) "Creating account..." else "Sign Up")
             }
 
+            // Navigation back to the Sign In screen
             TextButton(
                 onClick = onNavigateToSignIn,
                 modifier = Modifier.padding(top = 8.dp)

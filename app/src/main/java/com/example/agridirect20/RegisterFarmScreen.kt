@@ -15,19 +15,42 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
+/**
+ * RegisterFarmScreen
+ *
+ * Allows users to register a new farm and add products before saving to Firebase.
+ * Features:
+ *  - Collect farm info (name, description, ZIP)
+ *  - Add multiple products with validation
+ *  - Save farm + product list to Firestore through FirebaseFarmRepository
+ *
+ * This screen is used when:
+ *    navController.navigate("registerFarm")
+ *
+ * Layout:
+ *  - Farm information form
+ *  - Product entry form
+ *  - Scrollable preview of added products
+ *  - Save button to upload everything to Firestore
+ */
 @Composable
 fun RegisterFarmScreen(navController: NavController) {
+
+    // Farm Input Fields
     var farmName by remember { mutableStateOf("") }
     var farmDescription by remember { mutableStateOf("") }
     var farmZip by remember { mutableStateOf("") }
 
+    // List of products being added in-memory before saving
     val products = remember { mutableStateListOf<Product>() }
 
+    // Product Input Fields
     var productName by remember { mutableStateOf("") }
     var productDescription by remember { mutableStateOf("") }
     var productPriceText by remember { mutableStateOf("") }
     var productAmountText by remember { mutableStateOf("") }
 
+    // UI State
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -38,85 +61,76 @@ fun RegisterFarmScreen(navController: NavController) {
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
+
+            // Page Title
             Text(
                 text = "Edit / Register Your Farm",
                 style = MaterialTheme.typography.headlineSmall
             )
 
+            // Farm Information Form
             OutlinedTextField(
                 value = farmName,
                 onValueChange = {
-                    farmName = it
-                    errorMessage = null
-                    successMessage = null
+                    farmName = it; errorMessage = null; successMessage = null
                 },
                 label = { Text("Farm Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             )
 
             OutlinedTextField(
                 value = farmDescription,
                 onValueChange = {
-                    farmDescription = it
-                    errorMessage = null
-                    successMessage = null
+                    farmDescription = it; errorMessage = null; successMessage = null
                 },
                 label = { Text("Farm Description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             )
 
             OutlinedTextField(
                 value = farmZip,
                 onValueChange = {
-                    farmZip = it
-                    errorMessage = null
-                    successMessage = null
+                    farmZip = it; errorMessage = null; successMessage = null
                 },
                 label = { Text("Farm ZIP Code") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             )
+
 
             Spacer(Modifier.height(24.dp))
 
+            // Product Section
             Text(
                 text = "Products for this farm",
                 style = MaterialTheme.typography.titleMedium
             )
 
+            // Product Name
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
                 label = { Text("Product Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             )
 
+            // Product Description
             OutlinedTextField(
                 value = productDescription,
                 onValueChange = { productDescription = it },
                 label = { Text("Product Description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             )
 
+            // Price + Amount Row
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedTextField(
@@ -134,18 +148,19 @@ fun RegisterFarmScreen(navController: NavController) {
                 )
             }
 
+            // Add Product Button
             AgriPrimaryButton(
                 onClick = {
-                    errorMessage = null
-                    successMessage = null
+                    errorMessage = null; successMessage = null
 
+                    // Validation
                     if (productName.isBlank()) {
                         errorMessage = "Product name is required."
                         return@AgriPrimaryButton
                     }
 
                     val price = productPriceText.toDoubleOrNull()
-                    if (price == null || price < 0.0) {
+                    if (price == null || price < 0) {
                         errorMessage = "Enter a valid price."
                         return@AgriPrimaryButton
                     }
@@ -156,6 +171,7 @@ fun RegisterFarmScreen(navController: NavController) {
                         return@AgriPrimaryButton
                     }
 
+                    // Add product to list
                     products.add(
                         Product(
                             name = productName.trim(),
@@ -165,6 +181,7 @@ fun RegisterFarmScreen(navController: NavController) {
                         )
                     )
 
+                    // Reset fields
                     productName = ""
                     productDescription = ""
                     productPriceText = ""
@@ -172,13 +189,12 @@ fun RegisterFarmScreen(navController: NavController) {
 
                     successMessage = "Product added (remember to Save Farm)."
                 },
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
             ) {
                 Text("Add Product To This Farm")
             }
 
+            // Preview Added Products
             if (products.isNotEmpty()) {
                 Text(
                     text = "Current Products:",
@@ -187,9 +203,7 @@ fun RegisterFarmScreen(navController: NavController) {
                 )
 
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(products) { product ->
@@ -201,29 +215,33 @@ fun RegisterFarmScreen(navController: NavController) {
                 }
             }
 
-            if (errorMessage != null) {
+            // Display Errors
+            errorMessage?.let {
                 Text(
-                    text = errorMessage!!,
+                    text = it,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 12.dp)
                 )
             }
 
-            if (successMessage != null) {
+            // Display Success
+            successMessage?.let {
                 Text(
-                    text = successMessage!!,
+                    text = it,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
+
             Spacer(Modifier.height(16.dp))
 
+            // SAVE FARM BUTTON
             AgriPrimaryButton(
                 onClick = {
-                    errorMessage = null
-                    successMessage = null
+                    errorMessage = null; successMessage = null
 
+                    // Basic validation
                     if (farmName.isBlank()) {
                         errorMessage = "Farm name is required."
                         return@AgriPrimaryButton
@@ -233,9 +251,11 @@ fun RegisterFarmScreen(navController: NavController) {
                         return@AgriPrimaryButton
                     }
 
+                    // Upload to Firebase
                     scope.launch {
                         try {
                             isSaving = true
+
                             FirebaseFarmRepository.createFarmWithProducts(
                                 name = farmName,
                                 description = farmDescription,
@@ -243,6 +263,7 @@ fun RegisterFarmScreen(navController: NavController) {
                                 products = products.toList()
                             )
 
+                            // Clear form after success
                             farmName = ""
                             farmDescription = ""
                             farmZip = ""

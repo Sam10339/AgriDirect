@@ -10,6 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Displays the static About page for the app.
+ * Shows a brief description of AgriDirect and the current app version.
+ *
+ * Usage Example:
+ * ```
+ * navController.navigate("about")
+ * ```
+ */
 @Composable
 fun AboutScreen(navController: NavController) {
 
@@ -43,4 +52,3 @@ fun AboutScreen(navController: NavController) {
         }
     }
 }
-

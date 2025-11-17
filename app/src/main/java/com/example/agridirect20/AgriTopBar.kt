@@ -12,29 +12,45 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Reusable top app bar shown across multiple screens.
+ * Includes:
+ * - Back button (left)
+ * - App logo that navigates to Home (right)
+ *
+ * Usage:
+ * ```
+ * Scaffold(topBar = { AgriTopBar(navController) }) { ... }
+ * ```
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgriTopBar(
     navController: NavController
 ) {
     CenterAlignedTopAppBar(
+
+        /* Back button */
         navigationIcon = {
-            IconButton(onClick = {
-                navController.popBackStack()
-            }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_back),
                     contentDescription = "Back"
                 )
             }
         },
+
+        /* No title — we rely on the logo for branding */
         title = {},
+
+        /* Tappable logo that returns to Home */
         actions = {
             Box(
                 modifier = Modifier
-                    .height(48.dp)        // gives enough vertical space
-                    .padding(end = 8.dp)  // spacing on right edge
+                    .height(48.dp)
+                    .padding(end = 8.dp)
                     .clickable {
+                        // Always return to Home without stacking duplicate screens
                         navController.navigate("home") {
                             popUpTo("home") { inclusive = false }
                         }
@@ -45,12 +61,13 @@ fun AgriTopBar(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "AgriDirect Logo",
                     modifier = Modifier
-                        .fillMaxHeight()     // use full height available
-                        .aspectRatio(1f),    // keeps it perfectly square
+                        .fillMaxHeight()
+                        .aspectRatio(1f), // keeps the logo square
                     contentScale = ContentScale.Fit
                 )
             }
         },
+
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primary,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,

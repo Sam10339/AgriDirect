@@ -11,6 +11,25 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
+/**
+ * Screen for searching farms by ZIP code.
+ *
+ * Users can type a ZIP, submit the search, and view matching farms returned
+ * from Firebase. Selecting a farm navigates to its FarmDetailsScreen.
+ *
+ * Main behaviors:
+ * - Accept ZIP input
+ * - Load farms from FirebaseFarmRepository
+ * - Display errors (invalid ZIP, no results, Firestore failure)
+ * - Navigate to farm details when a farm card is tapped
+ *
+ * USAGE IN NAV GRAPH:
+ *
+ * composable("farms") {
+ *     FarmsScreen(navController)
+ * }
+ *
+ */
 @Composable
 fun FarmsScreen(navController: NavController) {
     var zipInput by remember { mutableStateOf("") }
@@ -28,6 +47,10 @@ fun FarmsScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+
+
+            //  ZIP Input + Search Button
+
             Text(
                 text = "Find Local Farms",
                 style = MaterialTheme.typography.headlineSmall
@@ -54,6 +77,7 @@ fun FarmsScreen(navController: NavController) {
                         try {
                             isLoading = true
                             farms = FirebaseFarmRepository.getFarmsByZip(zipInput)
+
                             if (farms.isEmpty()) {
                                 errorMessage = "No farms found for that ZIP."
                             }
@@ -71,6 +95,9 @@ fun FarmsScreen(navController: NavController) {
                 Text(if (isLoading) "Searching..." else "Search Farms")
             }
 
+
+            //  Error Message
+
             if (errorMessage != null) {
                 Text(
                     text = errorMessage!!,
@@ -80,6 +107,9 @@ fun FarmsScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(16.dp))
+
+
+            //  Farm Results List
 
             if (farms.isNotEmpty()) {
                 LazyColumn(
@@ -115,7 +145,6 @@ fun FarmsScreen(navController: NavController) {
                             }
                         }
                     }
-
                 }
             }
         }

@@ -14,26 +14,45 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
+/**
+ * Displays the checkout screen where the user reviews their cart items
+ * and places an order. Once confirmed, product stock is updated in Firebase.
+ *
+ * @param navController Navigation controller for routing.
+ * @param cartItems List of CartItem objects representing the current cart.
+ * @param onOrderPlaced Callback triggered after a successful checkout.
+ *
+ * USAGE EXAMPLE:
+ * CheckoutScreen(
+ *     navController = navController,
+ *     cartItems = cartItems,
+ *     onOrderPlaced = { clearCart() }
+ * )
+ *
+ */
 @Composable
 fun CheckoutScreen(
     navController: NavController,
     cartItems: List<CartItem>,
     onOrderPlaced: () -> Unit
 ) {
-    val total = cartItems.sumOf { it.price * it.quantity }
+    val total = cartItems.sumOf { it.price * it.quantity }         // Cart total
     val scope = rememberCoroutineScope()
-    var isPlacingOrder by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var isPlacingOrder by remember { mutableStateOf(false) }       // UI loading state
+    var errorMessage by remember { mutableStateOf<String?>(null) } // Firebase errors
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
+
             Text(
                 text = "Checkout",
                 style = MaterialTheme.typography.headlineSmall
@@ -41,12 +60,16 @@ fun CheckoutScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // If no items exist, show empty state
             if (cartItems.isEmpty()) {
+
                 Text(
                     text = "Your cart is empty. Add items before checking out.",
                     style = MaterialTheme.typography.bodyMedium
                 )
+
             } else {
+
                 Text(
                     text = "Review your items:",
                     style = MaterialTheme.typography.titleMedium
@@ -54,6 +77,7 @@ fun CheckoutScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                // List of cart items
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -68,19 +92,10 @@ fun CheckoutScreen(
                             Column(
                                 modifier = Modifier.padding(12.dp)
                             ) {
+                                Text(item.productName, style = MaterialTheme.typography.titleMedium)
+                                Text("Quantity: ${item.quantity}", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    text = item.productName,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = "Quantity: ${item.quantity}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = String.format(
-                                        "Line Total: $%.2f",
-                                        item.price * item.quantity
-                                    ),
+                                    String.format("Line Total: $%.2f", item.price * item.quantity),
                                     style = MaterialTheme.typography.labelMedium
                                 )
                             }
@@ -90,15 +105,17 @@ fun CheckoutScreen(
 
                 Spacer(Modifier.height(16.dp))
 
+                // Display order total
                 Text(
                     text = String.format("Order Total: $%.2f", total),
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                if (errorMessage != null) {
+                // Display Firebase error (if any)
+                errorMessage?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = errorMessage!!,
+                        text = it,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -106,13 +123,15 @@ fun CheckoutScreen(
 
                 Spacer(Modifier.height(12.dp))
 
+                // Checkout button
                 AgriPrimaryButton(
                     onClick = {
                         scope.launch {
                             isPlacingOrder = true
                             errorMessage = null
+
                             try {
-                                // Update stock in Firebase for each item
+                                // Reduce stock in Firebase for each purchased item
                                 cartItems.forEach { item ->
                                     FirebaseFarmRepository.decrementProductStock(
                                         farmId = item.farmId,
@@ -121,8 +140,9 @@ fun CheckoutScreen(
                                     )
                                 }
 
-                                // After successful stock updates
+                                // After success → trigger callback
                                 onOrderPlaced()
+
                             } catch (e: Exception) {
                                 errorMessage = "Failed to place order: ${e.message}"
                             } finally {

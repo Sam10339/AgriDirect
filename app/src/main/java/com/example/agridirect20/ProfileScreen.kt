@@ -13,6 +13,26 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * ProfileScreen
+ *
+ * Displays basic account information for the currently signed-in user.
+ * Includes actions for:
+ *  - Sending a password reset email
+ *  - Deleting the account
+ *  - Signing out
+ *
+ * Uses FirebaseAuth to read and modify user authentication state.
+ *
+ * Example Usage:
+ * navController.navigate("profile")
+ *
+ * Visual Structure:
+ *  ┌──────────── Top App Bar ────────────┐
+ *  |   Back Button     Logo/Home Button  |
+ *  └──────────────────────────────────────┘
+ *  Profile header → account actions → status message
+ */
 @Composable
 fun ProfileScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
@@ -30,6 +50,8 @@ fun ProfileScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+
+            // --- Page Title ---
             Text(
                 text = "Profile",
                 style = MaterialTheme.typography.headlineSmall
@@ -37,23 +59,28 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.padding(top = 12.dp))
 
+            // --- User Greeting ---
             Text(
                 text = "Hello, $email",
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.padding(top = 12.dp))
-
             Spacer(modifier = Modifier.padding(top = 20.dp))
 
-            // Change Password (Send reset email)
+            /**
+             *
+             *  CHANGE PASSWORD
+             *
+             * Sends a Firebase password reset email
+             * to the email attached to the user account.
+             */
             AgriPrimaryButton(
                 onClick = {
                     if (currentUser?.email != null) {
                         auth.sendPasswordResetEmail(currentUser.email!!)
                             .addOnCompleteListener { task ->
                                 statusMessage = if (task.isSuccessful) {
-                                    "Password reset email sent to ${currentUser.email} check spam folder"
+                                    "Password reset email sent to ${currentUser.email}. Check your spam folder."
                                 } else {
                                     "Failed to send reset email: ${task.exception?.message ?: "Unknown error"}"
                                 }
@@ -69,7 +96,13 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.padding(top = 12.dp))
 
-            // Delete Account
+            /**
+             *
+             *  DELETE ACCOUNT
+             *
+             * Permanently deletes the user's Firebase account.
+             * After deletion, navigates back to Sign-In.
+             */
             AgriPrimaryButton(
                 onClick = {
                     if (currentUser != null) {
@@ -77,12 +110,12 @@ fun ProfileScreen(navController: NavController) {
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     statusMessage = "Account deleted."
-                                    // After delete, navigate to Sign In and clear back stack
                                     navController.navigate("signin") {
                                         popUpTo(0) { inclusive = true }
                                     }
                                 } else {
-                                    statusMessage = "Failed to delete account: ${task.exception?.message ?: "Unknown error"}"
+                                    statusMessage =
+                                        "Failed to delete account: ${task.exception?.message ?: "Unknown error"}"
                                 }
                             }
                     } else {
@@ -96,7 +129,12 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.padding(top = 20.dp))
 
-            // Sign Out Button
+            /**
+             *
+             *  SIGN OUT
+             *
+             * Signs out via AuthManager and returns to login.
+             */
             AgriPrimaryButton(
                 onClick = {
                     AuthManager.signOut()
@@ -109,7 +147,7 @@ fun ProfileScreen(navController: NavController) {
                 Text("Sign Out")
             }
 
-            // Status / error text
+            // Status/Error messages
             statusMessage?.let {
                 Spacer(modifier = Modifier.padding(top = 16.dp))
                 Text(

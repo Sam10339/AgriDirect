@@ -14,38 +14,60 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Simple UI model representing a blog article.
+ *
+ * @param id Used for navigation to the full article.
+ * @param title Displayed in the list.
+ * @param summary Short preview text for the article.
+ */
 data class ArticleUi(
     val id: String,
     val title: String,
     val summary: String
 )
 
+/**
+ * Screen that displays a list of articles for the app's "Blog & Learning" section.
+ *
+ * Users can tap an article to open the full article page.
+ *
+ * USAGE EXAMPLE (AppNav):
+ * composable("blog") {
+ *     BlogScreen(
+ *         navController = navController,
+ *         onArticleClick = { id -> navController.navigate("article/$id") }
+ *     )
+ * }
+ */
 @Composable
 fun BlogScreen(
     navController: NavController,
     onArticleClick: (String) -> Unit
 ) {
+    // Static list of articles used by the Blog section.
     val articles = listOf(
         ArticleUi(
             id = "a1",
             title = "The Benefits and Basics of Home Gardening",
-            summary = "Home gardening provides a simple and rewarding way for people to grow fresh food, save money, support the environment, and improve their overall well-being."
+            summary = "Home gardening provides a simple and rewarding way for people to grow fresh food, save money, and support the environment."
         ),
         ArticleUi(
             id = "a2",
             title = "The Importance of Water Conservation",
-            summary = "Water conservation is essential for protecting limited freshwater resources, reducing energy use, preserving ecosystems, and ensuring a sustainable future for generations to come."
+            summary = "Water conservation protects our environment, saves energy, and supports sustainable living."
         ),
         ArticleUi(
             id = "a3",
-            title = "The Value of Natural Fertilizers ",
-            summary = "Natural fertilizers offer a sustainable, safe, and cost-effective way to improve soil health, reduce environmental harm, and grow healthier crops without relying on synthetic chemicals."
+            title = "The Value of Natural Fertilizers",
+            summary = "Natural fertilizers improve soil health and reduce chemical runoff while growing healthier crops."
         )
     )
 
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -57,6 +79,7 @@ fun BlogScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // Scrollable list of article cards
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -71,6 +94,14 @@ fun BlogScreen(
     }
 }
 
+/**
+ * A card representing a single article in the blog list.
+ *
+ * Displays the article title and summary, and navigates when clicked.
+ *
+ * Example:
+ * ArticleCard(article) { navController.navigate("article/${article.id}") }
+ */
 @Composable
 fun ArticleCard(
     article: ArticleUi,
@@ -86,6 +117,7 @@ fun ArticleCard(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     ) {
+
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
@@ -93,6 +125,7 @@ fun ArticleCard(
                 text = article.title,
                 style = MaterialTheme.typography.titleMedium
             )
+
             Text(
                 text = article.summary,
                 style = MaterialTheme.typography.bodyMedium,
@@ -101,4 +134,3 @@ fun ArticleCard(
         }
     }
 }
-

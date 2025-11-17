@@ -13,12 +13,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * MainMenuScreen
+ *
+ * Displays a simple settings-style menu with navigation to:
+ *  - Profile
+ *  - About
+ *
+ * Called from the bottom navigation ("Menu").
+ *
+ * Usage Example (from AppNav):
+ *
+ * MainMenuScreen(
+ *     navController,
+ *     onOpenProfile = { navController.navigate("profile") },
+ *     onOpenAbout = { navController.navigate("about") }
+ * )
+ */
 @Composable
 fun MainMenuScreen(
     navController: NavController,
     onOpenProfile: () -> Unit,
     onOpenAbout: () -> Unit,
-
 ) {
     Scaffold(
         topBar = { AgriTopBar(navController = navController) }
@@ -41,6 +57,21 @@ fun MainMenuScreen(
     }
 }
 
+/**
+ * MenuItemCard
+ *
+ * Reusable card component for menu options.
+ *
+ * Parameters:
+ *  - title: Label displayed on the card.
+ *  - onClick: Action triggered when the card is tapped.
+ *
+ * Usage:
+ *
+ * MenuItemCard("Profile") {
+ *     navController.navigate("profile")
+ * }
+ */
 @Composable
 fun MenuItemCard(
     title: String,
