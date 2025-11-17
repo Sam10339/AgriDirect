@@ -76,8 +76,7 @@ val MapPropertiesSaver: Saver<MapProperties, Any> = Saver(
     },
     restore = { list ->
         // Restore the settings from the list
-        @Suppress("UNCHECKED_CAST")
-        list as List<Any?> // Cast the list back to List<Boolean>
+        list as List<Any?> // Cast the list back
         MapProperties(
             isBuildingEnabled = list[0] as Boolean,
             isIndoorEnabled = list[1] as Boolean,
@@ -92,20 +91,21 @@ val MapPropertiesSaver: Saver<MapProperties, Any> = Saver(
     }
 )
 
+// Retrieve the data for venues/farmer's markets from database.
 suspend fun retrieveVenues(): List<Venue> {
     return FirebaseVenueRepository.getVenues()
 }
 
+// GoogleMaps with markers for venues.
 @Preview
 @Composable
 fun MapScreen(){
-    val kenoshaCommonMarkets = LatLng(42.5856, -87.8144)
     var venues by remember { mutableStateOf<List<Venue>>(emptyList()) }
-    runBlocking {
+    runBlocking { // Suspend code, needs coroutine
         venues = retrieveVenues()
     }
 
-    val cameraPositionState = rememberCameraPositionState {
+    val cameraPositionState = rememberCameraPositionState { //Starting camera position is Kenosha Common Markets
         position = CameraPosition.fromLatLngZoom(LatLng(42.5856, -87.8144), 14f)
     }
     // Use rememberSaveable with the custom saver
@@ -123,6 +123,7 @@ fun MapScreen(){
             zoomGesturesEnabled = true
         ))
     }
+    // Use rememberSaveable with the custom saver
     var properties by rememberSaveable(stateSaver = MapPropertiesSaver) {
         mutableStateOf(MapProperties(
             isBuildingEnabled=false,
@@ -137,18 +138,19 @@ fun MapScreen(){
         ))
     }
 
+    //The map.
     GoogleMap(
         modifier = Modifier.fillMaxSize(1f), // Fraction of a full screen
         cameraPositionState = cameraPositionState,
         properties = properties,
         uiSettings = uiSettings
-    ) { for (item in venues) {
-        val latitude = item.address.latitude
-        val longitude = item.address.longitude
-        Marker(
-            state = rememberMarkerState(position = (LatLng(latitude, longitude))),
-            title = item.name
-        )
-    }
+    ) { for (item in venues) { //Creating markers from the list of venues pulled form the database.
+            val latitude = item.address.latitude //Converting GeoPoint to LatLng
+            val longitude = item.address.longitude
+            Marker( //Creating the marker.
+                state = rememberMarkerState(position = (LatLng(latitude, longitude))),
+                title = item.name
+            )
+        }
     }
 }
