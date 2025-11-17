@@ -1,7 +1,7 @@
 package com.example.agridirect20
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.getField
 import kotlinx.coroutines.tasks.await
 
@@ -15,7 +15,7 @@ object FirebaseVenueRepository {
      */
     suspend fun createVenue(
         name: String,
-        address: LatLng,
+        address: GeoPoint,
     ): Venue {
         val userId = AuthManager.currentUser?.uid
             ?: throw IllegalStateException("User must be signed in to create a venue")
@@ -61,7 +61,7 @@ object FirebaseVenueRepository {
             Venue(
                 id = doc.id,
                 name = doc.getString("name") ?: "",
-                address = doc.getField("address") ?: LatLng(0.0, 0.0)
+                address = doc.getField("address") ?: GeoPoint(0.0, 0.0)
             )
         }
     }
@@ -78,7 +78,7 @@ object FirebaseVenueRepository {
             Venue(
                 id = doc.id,
                 name = doc.getString("name") ?: "",
-                address = doc.getField("address") ?: LatLng(0.0, 0.0)
+                address = doc.getField("address") ?: GeoPoint(0.0, 0.0)
             )
         }
     }

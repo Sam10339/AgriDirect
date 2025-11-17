@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -20,6 +21,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlinx.coroutines.runBlocking
 
 // Define a custom Saver for MapUiSettings
 val MapUiSettingsSaver: Saver<MapUiSettings, Any> = Saver(
@@ -90,15 +92,21 @@ val MapPropertiesSaver: Saver<MapProperties, Any> = Saver(
     }
 )
 
+suspend fun retrieveVenues(): List<Venue> {
+    return FirebaseVenueRepository.getVenues()
+}
+
 @Preview
 @Composable
 fun MapScreen(){
     val kenoshaCommonMarkets = LatLng(42.5856, -87.8144)
-    val kenoshaHarborMarket = LatLng(42.5800, -87.8221)
-    val KenoshaPublicMarket = LatLng(42.5758, -87.8163)
+    var venues by remember { mutableStateOf<List<Venue>>(emptyList()) }
+    runBlocking {
+        venues = retrieveVenues()
+    }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(kenoshaCommonMarkets, 10f)
+        position = CameraPosition.fromLatLngZoom(LatLng(42.5856, -87.8144), 14f)
     }
     // Use rememberSaveable with the custom saver
     var uiSettings by rememberSaveable(stateSaver = MapUiSettingsSaver) {
@@ -130,14 +138,17 @@ fun MapScreen(){
     }
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize(0.7f),
+        modifier = Modifier.fillMaxSize(0.7f), // Fraction of a full screen
         cameraPositionState = cameraPositionState,
         properties = properties,
         uiSettings = uiSettings
-    ) {
+    ) { for (item in venues) {
+        val latitude = item.address.latitude
+        val longitude = item.address.longitude
         Marker(
-            state = rememberMarkerState(position = kenoshaCommonMarkets),
-            title = "One Marker"
+            state = rememberMarkerState(position = (LatLng(latitude, longitude))),
+            title = item.name
         )
+    }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.agridirect20
 
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.GeoPoint
 
 data class Product(
     val id: String = "",          // Firestore doc id
@@ -22,5 +23,5 @@ data class Farm(
 data class Venue(
     val id: String = "",
     val name: String = "",
-    val address: LatLng = LatLng(0.0, 0.0),
+    val address: GeoPoint = GeoPoint(0.0, 0.0),
 )
